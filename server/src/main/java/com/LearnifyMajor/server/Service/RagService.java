@@ -26,61 +26,98 @@ public class RagService {
     private final ChatClient chatClient;
     private final VectorStore vectorStore;
 
+    private static final int MAX_FILE_SIZE_MB = 10;
+
     public String ingest(MultipartFile file) throws IOException {
-        // Basic validation
+
+
+        validateFile(file);
+
+        String filename = file.getOriginalFilename();
+        log.info("Starting ingestion for file: {}", filename);
+
+
+        ByteArrayResource pdfResource = new ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return filename;
+            }
+        };
+
+
+        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(pdfResource);
+        List<Document> documents = pdfReader.get();
+
+        if (documents.isEmpty()) {
+            throw new ResourceNotFoundException("No readable content found in PDF");
+        }
+
+        log.info("Extracted {} pages from PDF", documents.size());
+
+//        // 4. Clean text (important!)
+//        for (Document document : documents) {
+//            String cleanedText = document.
+//
+//        }
+
+
+        TokenTextSplitter splitter = new TokenTextSplitter();
+        List<Document> chunks = splitter.apply(documents);
+
+        log.info("Split into {} chunks", chunks.size());
+
+
+        int page = 1;
+        //Todo- add user id in meta data later
+        for (Document doc : chunks) {
+            doc.getMetadata().put("source", filename);
+            doc.getMetadata().put("page", page++);
+            doc.getMetadata().put("timestamp", System.currentTimeMillis());
+        }
+
+
+        batchInsert(chunks, 100);
+
+        log.info("Stored {} chunks in PgVector", chunks.size());
+
+        return String.format(
+                "Successfully ingested '%s' — %d pages, %d chunks stored.",
+                filename, documents.size(), chunks.size()
+        );
+    }
+
+
+
+    private void validateFile(MultipartFile file) {
         if (file.isEmpty()) {
             throw new ResourceNotFoundException("File is empty");
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE_MB * 1024 * 1024) {
+            throw new IllegalArgumentException("File too large (max 10MB)");
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
             throw new IllegalArgumentException("Only PDF files are allowed");
-
         }
+    }
 
 
-        log.info("Starting ingestion for file: {}", file.getOriginalFilename());
+//    private String cleanText(String text) {
+//        return text
+//                .replaceAll("\\s+", " ")        // remove extra spaces
+//                .replaceAll("-\\n", "")        // fix hyphen line breaks
+//                .replaceAll("\\n", " ")        // remove newlines
+//                .trim();
+//    }
 
-        // 1. Wrap the uploaded bytes so Spring AI can read them
 
-        ByteArrayResource pdfResource = new ByteArrayResource(file.getBytes()) {
-            @Override
-            public String getFilename() {
-                return file.getOriginalFilename();
-            }
-        };
-
-        // 2. Read PDF — extracts text page by page into Document objects
-        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(pdfResource);
-        List<Document> documents = pdfReader.get();
-        log.info("Extracted {} pages from PDF", documents.size());
-        if (documents.isEmpty()) {
-            throw new ResourceNotFoundException("No readable content found in PDF");
+    private void batchInsert(List<Document> chunks, int batchSize) {
+        for (int i = 0; i < chunks.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, chunks.size());
+            List<Document> batch = chunks.subList(i, end);
+            vectorStore.add(batch);
         }
-
-        // 3. Split into smaller chunks
-        // TokenTextSplitter breaks large pages into ~500 token chunks
-        // with 100 token overlap so context is not lost between chunks
-        TokenTextSplitter splitter = new TokenTextSplitter();
-
-        List<Document> chunks = splitter.apply(documents);
-        log.info("Split into {} chunks", chunks.size());
-
-        //ToDo- add the user id and file name to check from which user the query is generated
-        chunks.forEach(doc ->
-                doc.getMetadata().put("source", file.getOriginalFilename()
-                )
-        );
-
-        // 4. Embed + store in one call
-        // Spring AI calls Ollama (nomic-embed-text) to embed each chunk
-        // then upserts all vectors into PgVector automatically
-        vectorStore.add(chunks);
-        log.info("Stored {} chunks in PgVector", chunks.size());
-
-        return String.format(
-                "Successfully ingested '%s' — %d pages, %d chunks stored.",
-                file.getOriginalFilename(), documents.size(), chunks.size()
-        );
     }
 }

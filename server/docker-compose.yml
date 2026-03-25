@@ -1,0 +1,22 @@
+
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16   # official pgvector image — has the extension pre-installed
+    container_name: ragdb
+    environment:
+      POSTGRES_DB: ragdb
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ragpass
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # data persists across restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raguser -d ragdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

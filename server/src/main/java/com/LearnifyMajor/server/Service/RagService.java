@@ -1,13 +1,17 @@
 package com.LearnifyMajor.server.Service;
 
+import com.LearnifyMajor.server.DTO.ChatResponseDto;
+import com.LearnifyMajor.server.DTO.IngestResponseDto;
 import com.LearnifyMajor.server.Exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
@@ -26,9 +30,10 @@ public class RagService {
     private final ChatClient chatClient;
     private final VectorStore vectorStore;
 
+
     private static final int MAX_FILE_SIZE_MB = 10;
 
-    public String ingest(MultipartFile file) throws IOException {
+    public IngestResponseDto ingest(MultipartFile file) throws IOException {
 
 
         validateFile(file);
@@ -80,10 +85,40 @@ public class RagService {
 
         log.info("Stored {} chunks in PgVector", chunks.size());
 
-        return String.format(
-                "Successfully ingested '%s' — %d pages, %d chunks stored.",
-                filename, documents.size(), chunks.size()
-        );
+          return new IngestResponseDto(filename, chunks.size(), documents.size());
+
+    }
+
+    public ChatResponseDto answer(String question , String fileName) {
+
+        log.info("Answering question: {}", question);
+
+        // QuestionAnswerAdvisor does all of this automatically:
+        //   1. Embeds the question using nomic-embed-text
+        //   2. Searches PgVector for the top-4 most relevant chunks
+        //   3. Injects those chunks into the prompt as context
+        //   4. Sends the enriched prompt to Mistral
+        String safeFile = fileName.replace("'", "\\'");
+
+        SearchRequest searchRequest = SearchRequest.builder()
+                .topK(5)
+                .filterExpression("source == '" + safeFile + "'")
+                .build();
+
+        QuestionAnswerAdvisor advisor = QuestionAnswerAdvisor.builder(vectorStore)
+                .searchRequest(searchRequest)
+                .build();
+
+        String answer = chatClient
+                .prompt()
+                .advisors(advisor)
+
+                .user(question)
+                .call()
+                .content();
+
+        log.info("Answer generated successfully");
+        return new ChatResponseDto(answer);
     }
 
 

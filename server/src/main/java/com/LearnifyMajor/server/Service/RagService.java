@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -89,35 +91,63 @@ public class RagService {
 
     }
 
-    public ChatResponseDto answer(String question , String fileName) {
+    public ChatResponseDto answer(String question, String fileName) {
 
-        log.info("Answering question: {}", question);
-
-        // QuestionAnswerAdvisor does all of this automatically:
-        //   1. Embeds the question using nomic-embed-text
-        //   2. Searches PgVector for the top-4 most relevant chunks
-        //   3. Injects those chunks into the prompt as context
-        //   4. Sends the enriched prompt to Mistral
-        String safeFile = fileName.replace("'", "\\'");
+        log.info("📥 Incoming question: {}", question);
+        log.info("📄 Filtering on file: {}", fileName);
 
         SearchRequest searchRequest = SearchRequest.builder()
-                .topK(5)
-                .filterExpression("source == '" + safeFile + "'")
+                .query(question)
+                .topK(4)
+                .filterExpression("source == '" + fileName + "'")
                 .build();
 
-        QuestionAnswerAdvisor advisor = QuestionAnswerAdvisor.builder(vectorStore)
-                .searchRequest(searchRequest)
-                .build();
+        log.info("🔍 SearchRequest: {}", searchRequest);
+
+        List<Document> docs = vectorStore.similaritySearch(searchRequest);
+
+        log.info("📊 Retrieved {} documents", docs.size());
+
+        if (docs.isEmpty()) {
+            log.warn("⚠️ No relevant documents found. Returning fallback.");
+            return new ChatResponseDto("I don't know");
+        }
+
+        // Log each chunk (important for debugging retrieval quality)
+        for (int i = 0; i < docs.size(); i++) {
+            Document d = docs.get(i);
+            log.info("📄 Chunk {} | score={} | metadata={}",
+                    i + 1,
+                    d.getScore(),
+                    d.getMetadata());
+        }
+
+        String context = docs.stream()
+                .map(Document::getText)
+                .map(String::trim)
+                .collect(Collectors.joining("\n\n"));
+
+        log.debug("🧠 Final Context Sent to LLM:\n{}", context);
 
         String answer = chatClient
                 .prompt()
-                .advisors(advisor)
+                .system("""
+                You are a strict question answering system.
 
+                Rules:
+                1. Answer ONLY from the provided context.
+                2. Do NOT use outside knowledge.
+                3. If the answer is not present, respond exactly: I don't know.
+                4. Keep answers short and precise.
+
+                Context:
+                """ + context)
                 .user(question)
                 .call()
                 .content();
 
-        log.info("Answer generated successfully");
+        log.info("🤖 LLM Answer: {}", answer);
+
         return new ChatResponseDto(answer);
     }
 

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.transformer.splitter.*;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 
@@ -62,14 +63,17 @@ public class RagService {
         log.info("Extracted {} pages from PDF", documents.size());
 
 //        // 4. Clean text (important!)
-//        for (Document document : documents) {
-//            String cleanedText = document.
-//
-//        }
+        List<Document> cleanedDocuments = documents.stream()
+                .map(doc -> {
+                    String cleanedText = cleanText(doc.getText());
+                    return new Document(cleanedText, doc.getMetadata());
+                })
+                .toList();
 
 
         TokenTextSplitter splitter = new TokenTextSplitter();
-        List<Document> chunks = splitter.apply(documents);
+
+        List<Document> chunks = splitter.apply(cleanedDocuments);
 
         log.info("Split into {} chunks", chunks.size());
 
@@ -93,30 +97,37 @@ public class RagService {
 
     public ChatResponseDto answer(String question, String fileName) {
 
-        log.info("📥 Incoming question: {}", question);
-        log.info("📄 Filtering on file: {}", fileName);
+        log.info("Incoming question: {}", question);
+        log.info("Filtering on file: {}", fileName);
+
+
 
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(question)
                 .topK(4)
                 .filterExpression("source == '" + fileName + "'")
                 .build();
+          // use manual context for better results
+//        QuestionAnswerAdvisor advisor = QuestionAnswerAdvisor
+//                        .builder(vectorStore)
+//                        .searchRequest(searchRequest)
+//                        .build();
 
-        log.info("🔍 SearchRequest: {}", searchRequest);
+        log.info("SearchRequest: {}", searchRequest);
 
         List<Document> docs = vectorStore.similaritySearch(searchRequest);
 
-        log.info("📊 Retrieved {} documents", docs.size());
+        log.info("Retrieved {} documents", docs.size());
 
         if (docs.isEmpty()) {
-            log.warn("⚠️ No relevant documents found. Returning fallback.");
+            log.warn("No relevant documents found. Returning fallback.");
             return new ChatResponseDto("I don't know");
         }
 
         // Log each chunk (important for debugging retrieval quality)
         for (int i = 0; i < docs.size(); i++) {
             Document d = docs.get(i);
-            log.info("📄 Chunk {} | score={} | metadata={}",
+            log.info("Chunk {} | score={} | metadata={}",
                     i + 1,
                     d.getScore(),
                     d.getMetadata());
@@ -127,7 +138,7 @@ public class RagService {
                 .map(String::trim)
                 .collect(Collectors.joining("\n\n"));
 
-        log.debug("🧠 Final Context Sent to LLM:\n{}", context);
+        log.debug("Final Context Sent to LLM:\n{}", context);
 
         String answer = chatClient
                 .prompt()
@@ -139,14 +150,14 @@ public class RagService {
                 2. Do NOT use outside knowledge.
                 3. If the answer is not present, respond exactly: I don't know.
                 4. Keep answers short and precise.
-
+                
                 Context:
                 """ + context)
                 .user(question)
                 .call()
                 .content();
 
-        log.info("🤖 LLM Answer: {}", answer);
+        log.info("LLM Answer: {}", answer);
 
         return new ChatResponseDto(answer);
     }
@@ -169,13 +180,17 @@ public class RagService {
     }
 
 
-//    private String cleanText(String text) {
-//        return text
-//                .replaceAll("\\s+", " ")        // remove extra spaces
-//                .replaceAll("-\\n", "")        // fix hyphen line breaks
-//                .replaceAll("\\n", " ")        // remove newlines
-//                .trim();
-//    }
+    private String cleanText(String text) {
+        if (text == null) return "";
+
+        return text
+                .replaceAll("\\r", "")
+                .replaceAll("\\n+", "\n")           // normalize new lines
+                .replaceAll("-\\n", "")             // fix broken words
+                .replaceAll("\\s{2,}", " ")         // remove extra spaces
+                .replaceAll("[^\\x00-\\x7F]", "")   // remove weird unicode
+                .trim();
+    }
 
 
     private void batchInsert(List<Document> chunks, int batchSize) {

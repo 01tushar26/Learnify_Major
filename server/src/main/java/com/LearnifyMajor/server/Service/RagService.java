@@ -3,6 +3,7 @@ package com.LearnifyMajor.server.Service;
 import com.LearnifyMajor.server.DTO.ChatResponseDto;
 import com.LearnifyMajor.server.DTO.IngestResponseDto;
 import com.LearnifyMajor.server.Exceptions.ResourceNotFoundException;
+import com.knuddels.jtokkit.api.EncodingType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -52,7 +53,6 @@ public class RagService {
             }
         };
 
-
         PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(pdfResource);
         List<Document> documents = pdfReader.get();
 
@@ -71,7 +71,13 @@ public class RagService {
                 .toList();
 
 
-        TokenTextSplitter splitter = new TokenTextSplitter();
+        TokenTextSplitter splitter = TokenTextSplitter.builder()
+                .withChunkSize(800)
+                .withMinChunkSizeChars(50)
+                .withMinChunkLengthToEmbed(200)
+                .withMaxNumChunks(20)
+                .withKeepSeparator(true)
+                .build();
 
         List<Document> chunks = splitter.apply(cleanedDocuments);
 

@@ -33,6 +33,7 @@ public class AppConfig {
     @Bean
     @Primary
     public EmbeddingModel embeddingModel(EmbeddingModel ollamaEmbeddingModel) {
+
         return ollamaEmbeddingModel;
     }
 }

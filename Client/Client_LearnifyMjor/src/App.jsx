@@ -1,233 +1,9 @@
+import "./App.css";
 import { useState, useRef, useEffect, useCallback } from "react";
 
-const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
-  body { font-family: 'Geist', system-ui, sans-serif; }
 
-  .app { min-height: 100vh; display: flex; flex-direction: column; transition: background 0.2s, color 0.2s; }
-  .dark  { background: #07070f; color: #e2e2f0; }
-  .light { background: #f2f2f8; color: #111118; }
 
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  .dark  ::-webkit-scrollbar-thumb { background: #22223a; border-radius: 99px; }
-  .light ::-webkit-scrollbar-thumb { background: #d4d4e8; border-radius: 99px; }
-
-  /* ── Card ── */
-  .card { border-radius: 18px; border: 1px solid; transition: border-color 0.2s, background 0.2s; }
-  .dark  .card { background: #0d0d1a; border-color: #1a1a2e; }
-  .light .card { background: #fff;    border-color: #e2e2ef; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-
-  /* ── Input ── */
-  .input {
-    width: 100%; border-radius: 10px; border: 1px solid; padding: 11px 15px;
-    font-family: 'Geist Mono', monospace; font-size: 13px; outline: none;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .dark  .input { background: #080810; border-color: #1c1c2c; color: #e2e2f0; }
-  .dark  .input::placeholder { color: #30304a; }
-  .dark  .input:focus { border-color: #4f46e5; }
-  .light .input { background: #f7f7fc; border-color: #dedeed; color: #111118; }
-  .light .input::placeholder { color: #aaaabb; }
-  .light .input:focus { border-color: #6366f1; }
-
-  /* ── Buttons ── */
-  .btn-primary {
-    width: 100%; padding: 12px 20px; border-radius: 10px;
-    font-family: 'Geist', sans-serif; font-size: 13.5px; font-weight: 600;
-    cursor: pointer; border: none; background: #4f46e5; color: #fff;
-    transition: opacity 0.15s, transform 0.1s; letter-spacing: -0.1px;
-  }
-  .btn-primary:hover:not(:disabled) { opacity: 0.88; }
-  .btn-primary:active:not(:disabled) { transform: scale(0.99); }
-  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
-
-  .btn-success {
-    width: 100%; padding: 12px 20px; border-radius: 10px;
-    font-family: 'Geist', sans-serif; font-size: 13.5px; font-weight: 600;
-    cursor: pointer; border: none; background: #059669; color: #fff;
-    transition: opacity 0.15s;
-  }
-  .btn-success:hover { opacity: 0.9; }
-
-  /* ── Tabs ── */
-  .tab-btn {
-    flex: 1; padding: 9px; border: none; cursor: pointer;
-    font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
-    border-radius: 8px; transition: background 0.15s, color 0.15s; background: transparent;
-  }
-  .dark  .tab-btn       { color: #3e3e5a; }
-  .dark  .tab-btn.active { background: #16163a; color: #a5b4fc; }
-  .dark  .tab-btn:hover:not(.active) { color: #6666a0; }
-  .light .tab-btn       { color: #9999bb; }
-  .light .tab-btn.active { background: #eef0ff; color: #4338ca; }
-  .light .tab-btn:hover:not(.active) { color: #6666aa; }
-
-  /* ── Labels & misc ── */
-  .lbl { font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 7px; }
-  .dark  .lbl { color: #30304a; }
-  .light .lbl { color: #aaaacc; }
-
-  .muted { font-size: 12px; }
-  .dark  .muted { color: #3a3a56; }
-  .light .muted { color: #aaaacc; }
-
-  /* ── Drop zone ── */
-  .drop-zone {
-    border-radius: 14px; border: 1.5px dashed; padding: 40px 24px;
-    text-align: center; cursor: pointer; transition: all 0.15s;
-  }
-  .dark  .drop-zone { border-color: #1e1e36; }
-  .dark  .drop-zone:hover, .dark  .drop-zone.has-file { border-color: #4f46e5; background: #0b0b20; }
-  .light .drop-zone { border-color: #cccce0; }
-  .light .drop-zone:hover, .light .drop-zone.has-file { border-color: #818cf8; background: #f4f4ff; }
-
-  /* ── Bubbles ── */
-  .bubble-user {
-    max-width: 78%; padding: 11px 15px; border-radius: 16px 16px 4px 16px;
-    font-size: 13.5px; line-height: 1.65; background: #4f46e5; color: #fff;
-  }
-  .bubble-ai {
-    max-width: 84%; padding: 11px 15px; border-radius: 16px 16px 16px 4px;
-    font-size: 13.5px; line-height: 1.65;
-  }
-  .dark  .bubble-ai { background: #0f0f1e; border: 1px solid #1c1c2e; color: #c8c8ee; }
-  .light .bubble-ai { background: #eeeeff; border: 1px solid #ddddf5; color: #333348; }
-
-  /* ── Quiz options ── */
-  .opt-btn {
-    width: 100%; text-align: left; padding: 11px 14px; border-radius: 10px;
-    cursor: pointer; font-family: 'Geist', sans-serif; font-size: 13px; border: 1px solid;
-    transition: all 0.15s;
-  }
-  .dark  .opt-btn           { background: #090914; border-color: #1a1a2c; color: #7777a0; }
-  .dark  .opt-btn:hover:not(:disabled) { border-color: #4f46e5; color: #b0b0f0; }
-  .dark  .opt-btn.sel       { background: #12123c; border-color: #4f46e5; color: #a5b4fc; }
-  .dark  .opt-btn.ok        { background: #041a10; border-color: #059669; color: #6ee7b7; }
-  .dark  .opt-btn.bad       { background: #1e0808; border-color: #dc2626; color: #fca5a5; }
-  .light .opt-btn           { background: #f8f8fc; border-color: #e0e0ef; color: #7777aa; }
-  .light .opt-btn:hover:not(:disabled) { border-color: #818cf8; color: #4338ca; }
-  .light .opt-btn.sel       { background: #eef0ff; border-color: #6366f1; color: #4338ca; }
-  .light .opt-btn.ok        { background: #ecfdf5; border-color: #059669; color: #065f46; }
-  .light .opt-btn.bad       { background: #fef2f2; border-color: #dc2626; color: #991b1b; }
-
-  /* ── Stats ── */
-  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .stat-box  { border-radius: 12px; padding: 16px; text-align: center; }
-  .dark  .stat-box { background: #090914; border: 1px solid #181828; }
-  .light .stat-box { background: #f4f4fc; border: 1px solid #e4e4f5; }
-  .stat-n { font-size: 24px; font-weight: 600; font-family: 'Geist Mono', monospace; }
-  .dark  .stat-n { color: #a5b4fc; }
-  .light .stat-n { color: #4338ca; }
-
-  /* ── Pill ── */
-  .pill {
-    display: inline-flex; align-items: center; padding: 3px 10px;
-    border-radius: 99px; font-size: 11px; font-weight: 500; font-family: 'Geist Mono', monospace;
-  }
-  .dark  .pill { background: #131330; color: #6666cc; border: 1px solid #1e1e38; }
-  .light .pill { background: #eef0ff; color: #4338ca; border: 1px solid #c7d2fe; }
-
-  /* ── Divider ── */
-  .hr { border: none; border-top: 1px solid; }
-  .dark  .hr { border-color: #121222; }
-  .light .hr { border-color: #ebebf5; }
-
-  /* ── Q badge ── */
-  .q-badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 22px; height: 22px; border-radius: 6px; font-size: 11px; font-weight: 600; flex-shrink: 0;
-  }
-  .dark  .q-badge { background: #141430; color: #7777cc; }
-  .light .q-badge { background: #eef0ff; color: #4338ca; }
-
-  /* ── Explanation ── */
-  .expl {
-    border-radius: 8px; padding: 11px 14px; font-size: 12.5px;
-    line-height: 1.65; font-family: 'Geist Mono', monospace;
-  }
-  .dark  .expl { background: #07070f; border: 1px solid #121222; color: #44446a; }
-  .light .expl { background: #f8f8ff; border: 1px solid #ddddf5; color: #8888aa; }
-
-  /* ── Score card ── */
-  .score-card {
-    border-radius: 14px; padding: 18px 22px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .dark  .score-card { background: #041a0e; border: 1px solid #0d3320; }
-  .light .score-card { background: #ecfdf5; border: 1px solid #a7f3d0; }
-
-  /* ── Spinner ── */
-  .spinner {
-    width: 14px; height: 14px; border-radius: 50%;
-    border: 2px solid transparent; border-top-color: currentColor;
-    animation: sp 0.7s linear infinite; display: inline-block;
-  }
-  @keyframes sp { to { transform: rotate(360deg); } }
-
-  /* ── Toast ── */
-  .toast-in { animation: tin 0.2s ease forwards; }
-  @keyframes tin { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
-
-  /* ── RESPONSIVE LAYOUT ── */
-  .page-wrapper {
-    flex: 1;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 40px 80px;
-  }
-
-  .two-col {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 28px;
-    align-items: start;
-  }
-
-  .sidebar {
-    position: sticky;
-    top: 32px;
-  }
-
-  .main-content {
-    min-width: 0;
-  }
-
-  @media (max-width: 820px) {
-    .page-wrapper { padding: 0 20px 60px; }
-    .two-col { grid-template-columns: 1fr; }
-    .sidebar { position: static; }
-  }
-
-  /* ── Send button ── */
-  .send-btn {
-    padding: 11px 20px; border-radius: 10px; border: none; cursor: pointer;
-    background: #4f46e5; color: #fff; font-size: 13px; font-weight: 600;
-    opacity: 1; transition: opacity 0.15s; white-space: nowrap; flex-shrink: 0;
-  }
-  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .send-btn:hover:not(:disabled) { opacity: 0.88; }
-
-  /* ── Chat area ── */
-  .chat-area {
-    border-radius: 14px; border: 1px solid;
-    padding: 18px; overflow-y: auto;
-    display: flex; flex-direction: column; gap: 14px;
-  }
-  .dark  .chat-area { background: #060610; border-color: #121222; }
-  .light .chat-area { background: #f5f5fc; border-color: #e4e4f5; }
-
-  /* ── Welcome banner ── */
-  .welcome-banner {
-    border-radius: 14px; padding: 22px 24px;
-    display: flex; align-items: center; gap: 16px;
-  }
-  .dark  .welcome-banner { background: #0a0a1c; border: 1px solid #181830; }
-  .light .welcome-banner { background: #f0f0ff; border: 1px solid #ddddf8; }
-`;
+  
 
 // ── Backend base URL ──────────────────────────────────────────────────────────
 const API = "http://localhost:8080";
@@ -647,7 +423,7 @@ export default function App() {
 
   return (
     <>
-      <style>{CSS}</style>
+      
       <div className={`app ${dark ? "dark" : "light"}`}>
         <Toasts toasts={toasts} remove={removeToast} />
 
@@ -694,12 +470,13 @@ export default function App() {
                 )}
               </div>
 
-              <div className="muted" style={{ textAlign: "right", marginTop: 20, fontFamily: "'Geist Mono', monospace", fontSize: 11 }}>
-                Learnify · RAG-powered learning · backend :8080
-              </div>
+              
             </div>
           </div>
         </div>
+        <div className="muted flex justify-center items-center" style={{  fontFamily: "'Geist Mono', monospace", fontSize: 11 }}>
+                Learnify · RAG-powered learning 
+              </div>
       </div>
     </>
   );

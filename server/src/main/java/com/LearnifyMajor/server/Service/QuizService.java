@@ -44,6 +44,7 @@ public class QuizService {
        if(fileName.isEmpty()){
            throw  new ResourceNotFoundException("Please provide the FILENAME for context");
        }
+        //todo- check for the fil eis present in db or not otherwise throw exceptions
 
         log.info("Generating {} MCQ questions from PDF name- {} and topic- {}", numberOfQuestion,fileName,topic);
 
@@ -65,7 +66,7 @@ public class QuizService {
 
         if (docs.isEmpty()) {
             log.warn("No relevant documents found. Returning fallback.");
-            throw  new ResourceNotFoundException("No relevant context found");
+            throw  new ResourceNotFoundException("No relevant context found for the topic {}"+topic);
         }
 
         // Log each chunk (important for debugging retrieval quality)

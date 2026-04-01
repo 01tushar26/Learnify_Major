@@ -70,7 +70,7 @@ public class RagService {
                 })
                 .toList();
 
-
+         // Chunking
         TokenTextSplitter splitter = TokenTextSplitter.builder()
                 .withChunkSize(800)
                 .withMinChunkSizeChars(50)
@@ -106,7 +106,7 @@ public class RagService {
         log.info("Incoming question: {}", question);
         log.info("Filtering on file: {}", fileName);
 
-
+//todo- check for the fil eis present in db or not otherwise throw exceptions
 
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(question)

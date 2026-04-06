@@ -13,5 +13,8 @@ Learnify is an AI teaching assistant built with **Spring Boot + Spring AI**. It 
 - **Score your answers** — submit answers and get instant feedback with explanations
 
 <p align="center">
-  <img src="assets/architecture.jpeg" alt="Learnify Architecture" width="1092"/>
+  <img src="assets/architecture.png" alt="Learnify Architecture" width="1772"/>
+</p>
+<p align="center">
+  <img src="assets/highlevelflow.png" alt="Learnify High-level Architecture" width="1490"/>
 </p>

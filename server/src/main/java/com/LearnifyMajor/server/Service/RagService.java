@@ -92,7 +92,7 @@ public class RagService {
             doc.getMetadata().put("timestamp", System.currentTimeMillis());
         }
 
-
+        //redis
         batchInsert(chunks, 100);
 
         log.info("Stored {} chunks in PgVector", chunks.size());

@@ -41,4 +41,19 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<?>> illegalArguementException(Exception ex){
+
+        ApiError er= ApiError.builder()
+                .timestamp(Timestamp.valueOf(LocalDateTime.now()))
+                .message(ex.getLocalizedMessage())
+                .httpStatus(HttpStatus.BAD_REQUEST)
+                .build();
+
+
+        ApiResponse<?> res = ApiResponse.builder().error(er).time(LocalDateTime.now()).build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
 }

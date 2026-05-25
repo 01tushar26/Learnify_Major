@@ -2,7 +2,7 @@ package com.LearnifyMajor.server.Controller;
 
 
 import com.LearnifyMajor.server.DTO.TranscriptionRestClientResponse;
-import com.LearnifyMajor.server.Service.TranscriptionClientService;
+import com.LearnifyMajor.server.Client.TranscriptionClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

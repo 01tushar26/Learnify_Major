@@ -1,6 +1,7 @@
 package com.LearnifyMajor.server.Controller;
 
 import com.LearnifyMajor.server.DTO.IngestResponseDto;
+import com.LearnifyMajor.server.Service.IngestService;
 import com.LearnifyMajor.server.Service.RagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +18,26 @@ public class RagController {
 
 
         private final RagService ragService;
+        private final IngestService ingestService;
 
-        @PostMapping("/ingest")
-        public ResponseEntity<IngestResponseDto> ingest(@RequestParam("file") MultipartFile file)  {
+        @PostMapping("/ingestVideo")
+        public ResponseEntity<IngestResponseDto> ingestVideo(@RequestParam("file") MultipartFile file)  {
             try {
-               return ResponseEntity.ok(ragService.ingest(file));
+                return ResponseEntity.ok(ingestService.ingestVideo(file));
             } catch (IOException e) {
-               throw new RuntimeException("Failed to process pdf");
+                throw new RuntimeException("Failed to process video");
             }
+
+
+        }
+        @PostMapping("/ingestPdf")
+        public ResponseEntity<IngestResponseDto> ingestPdf(@RequestParam("file") MultipartFile file)  {
+            try {
+                return ResponseEntity.ok(ingestService.ingestPdf(file));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to process pdf");
+            }
+
 
         }
     }

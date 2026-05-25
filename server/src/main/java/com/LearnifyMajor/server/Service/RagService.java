@@ -37,38 +37,8 @@ public class RagService {
 
     private static final int MAX_FILE_SIZE_MB = 10;
 
-    public IngestResponseDto ingest(MultipartFile file) throws IOException {
+    public IngestResponseDto chunkAndStore(List<Document> documents, String filename, int originalPageCount)  {
 
-
-        validateFile(file);
-
-        String filename = file.getOriginalFilename();
-        log.info("Starting ingestion for file: {}", filename);
-
-
-        ByteArrayResource pdfResource = new ByteArrayResource(file.getBytes()) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-        };
-
-        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(pdfResource);
-        List<Document> documents = pdfReader.get();
-
-        if (documents.isEmpty()) {
-            throw new ResourceNotFoundException("No readable content found in PDF");
-        }
-
-        log.info("Extracted {} pages from PDF", documents.size());
-
-//        // 4. Clean text (important!)
-        List<Document> cleanedDocuments = documents.stream()
-                .map(doc -> {
-                    String cleanedText = cleanText(doc.getText());
-                    return new Document(cleanedText, doc.getMetadata());
-                })
-                .toList();
 
          // Chunking
         TokenTextSplitter splitter = TokenTextSplitter.builder()
@@ -79,7 +49,7 @@ public class RagService {
                 .withKeepSeparator(true)
                 .build();
 
-        List<Document> chunks = splitter.apply(cleanedDocuments);
+        List<Document> chunks = splitter.apply(documents);
 
         log.info("Split into {} chunks", chunks.size());
 
@@ -92,14 +62,15 @@ public class RagService {
             doc.getMetadata().put("timestamp", System.currentTimeMillis());
         }
 
-        //redis
+
         batchInsert(chunks, 100);
 
         log.info("Stored {} chunks in PgVector", chunks.size());
 
-          return new IngestResponseDto(filename, chunks.size(), documents.size());
+          return new IngestResponseDto(filename, chunks.size(), originalPageCount);
 
     }
+
 
     public ChatResponseDto answer(String question, String fileName) {
 

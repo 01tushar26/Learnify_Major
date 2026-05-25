@@ -1,4 +1,4 @@
-package com.LearnifyMajor.server.Service;
+package com.LearnifyMajor.server.Client;
 
 import com.LearnifyMajor.server.DTO.TranscriptionRestClientResponse;
 import com.LearnifyMajor.server.Exceptions.ResourceNotFoundException;

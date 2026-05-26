@@ -10,10 +10,10 @@ RUN pip install --no-cache-dir -r Requirement.txt
 COPY Controller/controller.py .
 COPY Service/transcription.py ./transcription_service.py
 
-ARG WHISPER_MODEL=base
-RUN python -c "from faster_whisper import WhisperModel; WhisperModel('${WHISPER_MODEL}', device='cpu', compute_type='int8')"
+# Groq API key must be supplied at runtime — never bake secrets into the image
+# e.g. docker run -e GROQ_API_KEY=gsk_... ...
 
-ENV WHISPER_MODEL=${WHISPER_MODEL}
+ENV WHISPER_MODEL=whisper-large-v3
 
 EXPOSE 8000
 

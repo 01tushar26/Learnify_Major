@@ -5,23 +5,33 @@ import tempfile
 import logging
 from pathlib import Path
 
-from faster_whisper import WhisperModel
+from openai import OpenAI
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-MODEL_NAME = os.getenv("WHISPER_MODEL", "base")
-logger.info(f"Loading Whisper model: {MODEL_NAME}")
-model = WhisperModel(MODEL_NAME, device="cpu", compute_type="int8")
-logger.info("Whisper model loaded ✓")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise RuntimeError("GROQ_API_KEY environment variable is not set")
+
+MODEL_NAME = os.getenv("WHISPER_MODEL", "whisper-large-v3")
+logger.info(f"Using Groq Whisper model: {MODEL_NAME}")
+
+client = OpenAI(
+    api_key=GROQ_API_KEY,
+    base_url="https://api.groq.com/openai/v1",
+)
 
 TEMP_DIR = Path(tempfile.gettempdir()) / "transcription_service"
 TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def extract_audio(video_path: Path, audio_path: Path) -> None:
-    cmd = ["ffmpeg", "-y", "-i", str(video_path),
-           "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", str(audio_path)]
+    cmd = [
+        "ffmpeg", "-y", "-i", str(video_path),
+        "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",
+        str(audio_path),
+    ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"FFmpeg failed: {result.stderr}")
@@ -36,27 +46,39 @@ def transcribe_video(filename: str, content: bytes) -> dict:
         video_path.write_bytes(content)
         extract_audio(video_path, audio_path)
 
-        segments, info = model.transcribe(str(audio_path))
-        detected_language = info.language
-        result_segments = []
-        transcript_parts = []
+        logger.info(f"[{request_id}] Sending audio to Groq Whisper ({MODEL_NAME})...")
+        with open(audio_path, "rb") as audio_file:
+            response = client.audio.transcriptions.create(
+                model=MODEL_NAME,
+                file=audio_file,
+                response_format="verbose_json",
+            )
 
-        for seg in segments:
-            transcript_parts.append(seg.text.strip())
-            result_segments.append({
-                "id": seg.id,
-                "start": round(seg.start, 2),
-                "end": round(seg.end, 2),
-                "text": seg.text.strip(),
-            })
+        detected_language = getattr(response, "language", "unknown")
+        raw_segments = getattr(response, "segments", []) or []
+
+        result_segments = [
+            {
+                "id": idx,
+                "start": round(getattr(seg, "start", 0.0), 2),
+                "end": round(getattr(seg, "end", 0.0), 2),
+                "text": (getattr(seg, "text", "") or "").strip(),
+            }
+            for idx, seg in enumerate(raw_segments)
+        ]
+
+        transcript = response.text.strip() if response.text else " ".join(
+            s["text"] for s in result_segments
+        )
 
         return {
             "request_id": request_id,
             "filename": filename,
             "language": detected_language,
-            "transcript": " ".join(transcript_parts),
+            "transcript": transcript,
             "segments": result_segments,
         }
+
     finally:
         for p in (video_path, audio_path):
             if p.exists():

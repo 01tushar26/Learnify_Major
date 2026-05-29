@@ -35,7 +35,7 @@ public class RagService {
     private final VectorStore vectorStore;
 
 
-    private static final int MAX_FILE_SIZE_MB = 10;
+
 
     public IngestResponseDto chunkAndStore(List<Document> documents, String filename, int originalPageCount)  {
 
@@ -141,33 +141,11 @@ public class RagService {
 
 
 
-    private void validateFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new ResourceNotFoundException("File is empty");
-        }
-
-        if (file.getSize() > MAX_FILE_SIZE_MB * 1024 * 1024) {
-            throw new IllegalArgumentException("File too large (max 10MB)");
-        }
-
-        String filename = file.getOriginalFilename();
-        if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
-            throw new IllegalArgumentException("Only PDF files are allowed");
-        }
-    }
 
 
-    private String cleanText(String text) {
-        if (text == null) return "";
 
-        return text
-                .replaceAll("\\r", "")
-                .replaceAll("\\n+", "\n")           // normalize new lines
-                .replaceAll("-\\n", "")             // fix broken words
-                .replaceAll("\\s{2,}", " ")         // remove extra spaces
-                .replaceAll("[^\\x00-\\x7F]", "")   // remove weird unicode
-                .trim();
-    }
+
+
 
 
     private void batchInsert(List<Document> chunks, int batchSize) {

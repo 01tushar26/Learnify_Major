@@ -1,6 +1,5 @@
 package com.LearnifyMajor.server.Client;
 
-import com.LearnifyMajor.server.DTO.TranscriptionRestClientResponse;
 import com.LearnifyMajor.server.Exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

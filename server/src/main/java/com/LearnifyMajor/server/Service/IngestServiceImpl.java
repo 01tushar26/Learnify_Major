@@ -2,7 +2,7 @@ package com.LearnifyMajor.server.Service;
 
 import com.LearnifyMajor.server.Client.TranscriptionClientService;
 import com.LearnifyMajor.server.DTO.IngestResponseDto;
-import com.LearnifyMajor.server.DTO.TranscriptionRestClientResponse;
+import com.LearnifyMajor.server.Client.TranscriptionRestClientResponse;
 import com.LearnifyMajor.server.Exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +29,7 @@ public class IngestServiceImpl implements IngestService {
 
     @Override
     public IngestResponseDto ingestVideo(MultipartFile file) throws IOException {
+        validateFile(file,"video");
 
         String filename = file.getOriginalFilename();
         log.info("Starting video ingestion for file: {}", filename);

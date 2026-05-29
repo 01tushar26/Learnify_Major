@@ -1,6 +1,7 @@
-package com.LearnifyMajor.server.DTO;
+package com.LearnifyMajor.server.Client;
 
 
+import com.LearnifyMajor.server.DTO.Segment;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;

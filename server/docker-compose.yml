@@ -6,7 +6,7 @@ services:
     container_name: ragdb
     environment:
       POSTGRES_DB: ragdb
-      POSTGRES_USER: rag user
+      POSTGRES_USER: raguser
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5433:5432"
@@ -18,5 +18,24 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ragmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pgdata:
+  rabbitmq_data:
+

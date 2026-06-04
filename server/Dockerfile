@@ -1,10 +1,5 @@
 FROM eclipse-temurin:21-jdk-alpine
-WORKDIR /app
-COPY . .
-RUN chmod +x mvnw
-RUN ./mvnw clean package -DskipTests
-EXPOSE 8080
+COPY target/server-0.0.1-SNAPSHOT.jar learnify-backend.jar
+CMD ["java", "-jar", "learnify-backend.jar"]
 
-
-ENTRYPOINT ["java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]
 

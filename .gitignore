@@ -1,0 +1,30 @@
+# Environment files
+.env
+
+
+# Docker
+docker-compose.override.yml
+
+# Spring Boot build output
+server/target/
+
+# Python build/cache
+transcript-server/__pycache__/
+transcript-server/*.pyc
+transcript-server/venv/
+transcript-server/.venv/
+
+# IDE files
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Maven
+.mvn/timing.properties

@@ -15,7 +15,7 @@ public class RestclientConfig {
         factory.setReadTimeout(600_000);
 
         return RestClient.builder()
-                .baseUrl("http://localhost:8000/")
+                .baseUrl("http://transcript-server:8000")
                 .requestFactory(factory)
                 .build();
     }

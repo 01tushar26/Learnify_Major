@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import static com.LearnifyMajor.server.Message.BrokerRabbitMQConfig.VIDEO_EXCHANGE;
 import static com.LearnifyMajor.server.Message.BrokerRabbitMQConfig.VIDEO_ROUTING_KEY;
+import static com.LearnifyMajor.server.Utils.validateFile;
 
 @Component
 @RequiredArgsConstructor
@@ -28,6 +29,8 @@ public class VideoIngestPublisher {
     private final ModelMapper mapper;
 
     public VideoDto publish(MultipartFile file) throws IOException {
+
+        validateFile(file,"video");
 
         String jobId = UUID.randomUUID().toString();
         String filename = file.getOriginalFilename();

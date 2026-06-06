@@ -7,7 +7,7 @@ services:
     container_name: ragdb
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.dev
     environment:
       POSTGRES_DB: ragdb
       POSTGRES_USER: raguser
@@ -20,7 +20,7 @@ services:
     container_name: ragmq
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.dev
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
@@ -47,7 +47,7 @@ services:
     container_name: learnify-transcript-server
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.dev
     ports:
       - "8000:8000"
     depends_on:

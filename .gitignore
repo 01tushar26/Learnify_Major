@@ -1,6 +1,6 @@
 # Environment files
 .env
-
+.env.dev
 
 # Docker
 docker-compose.override.yml

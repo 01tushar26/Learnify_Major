@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
+
 const API = "http://localhost:8080";
 
 // ─── CSS injected once ────────────────────────────────────────────────────────
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -27,9 +27,9 @@ const CSS = `
     --amber:     #f59e0b;
     --radius:    10px;
     --radius-lg: 16px;
-    --mono: 'DM Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
-    --display: 'Syne', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+--sans: 'Inter', sans-serif;
+--display: 'Inter', sans-serif;
     --transition: 160ms ease;
   }
 
@@ -50,12 +50,18 @@ const CSS = `
     background: var(--accent); display: grid; place-items: center;
     font-size: 15px; line-height: 1;
   }
-  .logo-text { font-family: var(--display); font-weight: 800; font-size: 17px; letter-spacing: -0.5px; }
+  .logo-text {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.3px;
+}
   .badge {
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em;
     background: var(--accent-lo); color: var(--accent-hi);
     border: 1px solid var(--border2); border-radius: 4px; padding: 2px 7px;
   }
+    
   .body-grid {
     display: grid; grid-template-columns: 300px 1fr;
     gap: 0; height: calc(100vh - 56px); overflow: hidden;
@@ -1020,6 +1026,8 @@ export default function App() {
             {tab === "quiz" && <QuizPanel fileName={fileName} />}
           </main>
         </div>
+        
+  
       </div>
     </>
   );

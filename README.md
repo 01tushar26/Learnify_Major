@@ -266,4 +266,36 @@ docker-compose -f docker-compose-dev.yml up -d
  Soon
 
 ---
+## Future Enhancement
 
+### Authentication and Multi-Tenancy
+All documents are currently shared globally. Adding JWT-based user authentication and embedding a `userId` field in every vector store chunk would make Learnify a true multi-tenant platform where each user sees only their own uploaded content.
+ 
+### Timestamp-Linked Answers for Video Lectures
+When a user asks a question about a video, the system already has timestamped segments from Whisper. A future version would surface the exact timestamp alongside the answer — "This was discussed at 14:32 in the video" — and the frontend would render a clickable link that jumps the user to that precise moment in the original lecture.
+ 
+### Multi-Document Knowledge Base
+Currently each chat and quiz session is scoped to a single filename. Allowing users to group multiple documents into a named knowledge base and query across all of them simultaneously would enable richer, cross-source learning.
+ 
+### Hybrid Search (Keyword + Semantic)
+The current retrieval is purely vector-based (cosine similarity). Combining it with BM25 keyword search (reciprocal rank fusion) would significantly improve recall for exact-match queries such as specific variable names, theorem names, or technical terms where semantic similarity alone may not rank the right chunk highest.
+ 
+### Multi-Source Reasoning
+An advanced RAG mode where the LLM is given retrieved context from multiple documents and asked to synthesise, compare, or contrast information across them — useful for students reading multiple papers on the same topic.
+ 
+### Personalized and Adaptive Quizzes
+Track which questions a user answered incorrectly across sessions and generate follow-up quizzes that specifically target those weak areas. Over time the system builds a per-user knowledge profile and adjusts quiz difficulty automatically.
+ 
+### Flashcard Generation
+Alongside MCQ quizzes, automatically generate flashcard pairs (term → definition, concept → explanation) from ingested content. Flashcards follow a spaced repetition schedule to surface cards the user is most likely to have forgotten.
+ 
+### Adaptive Learning Recommendations
+After a chat or quiz session, analyse which topics the user struggled with and recommend specific sections of the document to re-read, or suggest related questions to explore. This transforms Learnify from a passive retrieval tool into an active learning coach.
+ 
+### Knowledge Gap Detection
+Compare the user's quiz performance against the full topic coverage of an ingested document and identify areas that have never been tested. Surface a "coverage map" showing which chapters or topics the user has engaged with versus which ones remain unreviewed — a strong signal for exam preparation.
+ 
+### Dead-Letter Queue and Retry Logic
+Failed video jobs currently require manual re-upload. Configuring a RabbitMQ dead-letter queue with exponential back-off retry would allow transient failures (network timeouts, temporary Groq API errors) to resolve automatically without user intervention.
+ 
+---

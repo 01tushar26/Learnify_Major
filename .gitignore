@@ -28,3 +28,4 @@ logs/
 
 # Maven
 .mvn/timing.properties
+.idea

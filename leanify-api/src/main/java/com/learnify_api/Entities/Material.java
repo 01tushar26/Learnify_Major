@@ -1,0 +1,58 @@
+package com.learnify_api.Entities;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.learnify_api.Entities.Enums.IngestStatus;
+import com.learnify_api.Entities.Enums.MaterialType;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class Material {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String jobId;
+
+    @Column(nullable = false)
+    private String filename;
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(nullable = false)
+    private MaterialType materialType;
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(nullable = false)
+    private IngestStatus status;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    private String errorMessage;
+
+    //parent or inverse side
+    @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<QuizEntity> quizzes = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
+    private User user;
+
+}

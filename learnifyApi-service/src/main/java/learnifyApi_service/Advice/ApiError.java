@@ -5,12 +5,13 @@ import lombok.Data;
 import org.hibernate.annotations.BatchSize;
 import org.springframework.http.HttpStatus;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
+
 
 @Data
 @Builder
 public class ApiError {
-    private String messsage;
+    private String message;
     private HttpStatus httpStatus;
     private Timestamp timestamp;
 }

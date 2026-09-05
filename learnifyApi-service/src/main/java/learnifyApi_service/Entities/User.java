@@ -24,8 +24,6 @@ public class User {
     @Column(nullable = false ,unique = true ,updatable = false)
     private String email;
 
-    @Column(nullable = false )
-    private String password;
 
     @Column(nullable = false)
     private String name;
@@ -35,6 +33,11 @@ public class User {
 
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+
+    private String provider;    // "google"
+
+    private String providerId;
 
 
 

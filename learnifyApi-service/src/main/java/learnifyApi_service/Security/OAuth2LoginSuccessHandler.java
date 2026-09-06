@@ -8,6 +8,7 @@ import learnifyApi_service.DTOs.LoginResponseDTO;
 import learnifyApi_service.Entities.User;
 import learnifyApi_service.Service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -21,6 +22,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private static final int SIX_MONTHS_SECONDS =  60 * 60 * 24 * 30 * 6;
     private final UserService userService;
     private final AuthService authService;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -43,7 +47,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         response.addCookie(refreshCookie);
 
         response.sendRedirect(
-                "http://localhost:5173/oauth-success?accessToken=" + tokens.getAccessToken()
+                frontendUrl+"/oauth-success?accessToken=" + tokens.getAccessToken()
         );
     }
 }

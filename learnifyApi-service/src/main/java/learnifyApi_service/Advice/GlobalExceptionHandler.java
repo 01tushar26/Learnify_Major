@@ -2,6 +2,7 @@ package learnifyApi_service.Advice;
 
 
 import io.jsonwebtoken.JwtException;
+import learnifyApi_service.Exceptions.DuplicateResourceException;
 import learnifyApi_service.Exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -20,6 +22,17 @@ public class GlobalExceptionHandler {
         ApiResponse<?> res = ApiResponse.builder().error(er).localDateTime(LocalDateTime.now()).build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+
+
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateResourceException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", ex.getMessage(),
+                "jobId", ex.getJobId(),
+                "status", ex.getStatus()
+        ));
     }
 
 

@@ -8,73 +8,61 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
 @Configuration
 public class MessageQueueConfig {
 
-    public static final String VIDEO_QUEUE       = "video.ingest.queue";
-    public static final String VIDEO_EXCHANGE    = "video.ingest.exchange";
+
+    // learnify-api PUBLISHES here. video-worker consumes.
+
+    public static final String VIDEO_EXCHANGE = "video.ingest.exchange";
     public static final String VIDEO_ROUTING_KEY = "video.ingest";
 
-    // --- PDF ---
-    public static final String PDF_QUEUE       = "pdf.ingest.queue";
-    public static final String PDF_EXCHANGE    = "pdf.ingest.exchange";
+
+    // learnify-api PUBLISHES here. rag-worker consumes.
+
+    public static final String PDF_EXCHANGE = "pdf.ingest.exchange";
     public static final String PDF_ROUTING_KEY = "pdf.ingest";
 
-    // --- Rag (video-worker -> rag-worker handoff after transcription) ---
-    public static final String RAG_QUEUE       = "rag.ingest.queue";
-    public static final String RAG_EXCHANGE    = "rag.ingest.exchange";
-    public static final String RAG_ROUTING_KEY = "rag.ingest";
 
+    // learnify-api CONSUMES here. video-worker (and later rag-worker, for final DONE) publish.
+    // -> Full declaration: exchange + queue + binding, since this service owns the listener.
+    public static final String STATUS_QUEUE = "video.status.queue";
+    public static final String STATUS_EXCHANGE = "video.status.exchange";
+    public static final String STATUS_ROUTING_KEY = "video.status";
+
+    // ---------- Video (publish-only: exchange only) ----------
     @Bean
     public DirectExchange videoExchange() {
         return new DirectExchange(VIDEO_EXCHANGE);
     }
 
-    @Bean
-    public Queue videoQueue() {
-        return QueueBuilder.durable(VIDEO_QUEUE).build();
-    }
-
-    @Bean
-    public Binding videoBinding() {
-        return BindingBuilder.bind(videoQueue()).to(videoExchange()).with(VIDEO_ROUTING_KEY);
-    }
+    // ---------- PDF (publish-only: exchange only) ----------
     @Bean
     public DirectExchange pdfExchange() {
         return new DirectExchange(PDF_EXCHANGE);
     }
 
+    // ---------- Video status (consume: full trio) ----------
     @Bean
-    public Queue pdfQueue() {
-        return QueueBuilder.durable(PDF_QUEUE).build();
+    public DirectExchange statusExchange() {
+        return new DirectExchange(STATUS_EXCHANGE);
     }
 
     @Bean
-    public Binding pdfBinding() {
-        return BindingBuilder.bind(pdfQueue()).to(pdfExchange()).with(PDF_ROUTING_KEY);
+    public Queue statusQueue() {
+        return QueueBuilder.durable(STATUS_QUEUE).build();
     }
 
     @Bean
-    public DirectExchange ragExchange() {
-        return new DirectExchange(RAG_EXCHANGE);
+    public Binding statusBinding() {
+        return BindingBuilder.bind(statusQueue()).to(statusExchange()).with(STATUS_ROUTING_KEY);
     }
 
-    @Bean
-    public Queue ragQueue() {
-        return QueueBuilder.durable(RAG_QUEUE).build();
-    }
-
-    @Bean
-    public Binding ragBinding() {
-        return BindingBuilder.bind(ragQueue()).to(ragExchange()).with(RAG_ROUTING_KEY);
-    }
-
-    //store the bytes in form of json in queue (JAVA obj -> Bytes)
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
-
 
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,

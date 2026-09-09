@@ -37,12 +37,8 @@ public class MaterialServiceImpl implements MaterialService {
 
         User user = Util.getAuthenticatedUser();
         List<Material> materials = repository.findByUserId(user.getId());
-        if(materials == null || materials.isEmpty()){
-            throw new RuntimeException("No material found");
-        }
         return materials.stream()
-                .map(a->mapper.map(a,MaterialDTO.class))
+                .map(a -> mapper.map(a, MaterialDTO.class))
                 .toList();
-
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 import static com.video_worker.Configuration.MessageBrokerConfig.VIDEO_QUEUE;
 
 @Slf4j
@@ -21,7 +23,7 @@ public class VideoIngestConsumer {
     private final VideoStatusPublisher videoStatusPublisher;
 
     @RabbitListener(queues = VIDEO_QUEUE)
-    public void consume(VideoIngestMessage message) {
+    public void consume(VideoIngestMessage message)  throws IOException {
 
         log.info("Picked up job [{}] for material [{}], file '{}'",
                 message.getJobId(), message.getMaterialId(), message.getFilename());

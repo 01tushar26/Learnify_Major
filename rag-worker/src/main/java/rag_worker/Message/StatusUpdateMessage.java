@@ -1,4 +1,4 @@
-package learnifyApi_service.MessageBroker;
+package rag_worker.Message;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class VideoStatusUpdateMessage implements Serializable {
+public class StatusUpdateMessage implements Serializable {
     private Long materialId;
     private String status;
     private String errorMessage;

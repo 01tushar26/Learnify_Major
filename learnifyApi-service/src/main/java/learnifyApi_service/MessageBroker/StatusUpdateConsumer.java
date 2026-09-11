@@ -13,12 +13,12 @@ import static learnifyApi_service.Configuration.MessageQueueConfig.STATUS_QUEUE;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class VideoStatusConsumer {
+public class StatusUpdateConsumer {
 
     private final MaterialRepository repository;
 
     @RabbitListener(queues = STATUS_QUEUE)
-    public void consume(VideoStatusUpdateMessage message){
+    public void consume(StatusUpdateMessage message){
         log.info("Status update received for material [{}]: {}", message.getMaterialId(), message.getStatus());
 
         Material material = repository.findById(message.getMaterialId())

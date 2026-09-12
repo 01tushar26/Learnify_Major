@@ -86,11 +86,8 @@ public class WebSecurityConfig {
     }
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
-        return (request, response, authException) -> {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Authentication required\"}");
-        };
+        return (request, response, authException) ->
+                handlerExceptionResolver.resolveException(request, response, null, authException);
     }
 }
 

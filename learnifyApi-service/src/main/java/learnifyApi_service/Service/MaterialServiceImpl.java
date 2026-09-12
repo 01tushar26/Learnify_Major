@@ -26,7 +26,7 @@ public class MaterialServiceImpl implements MaterialService {
         Material material = repository.findById(materialId).orElseThrow(()->new ResourceNotFoundException("Material not found"));
         User user = Util.getAuthenticatedUser();
 
-        if(!user.equals(material.getUser())){
+        if(!user.getId().equals(material.getUser().getId())){
             throw new AccessDeniedException("This material did not belong to you");
         }
         return mapper.map(material,MaterialDTO.class);

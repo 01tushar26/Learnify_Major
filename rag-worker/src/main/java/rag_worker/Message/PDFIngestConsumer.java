@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.annotation.RabbitListeners;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Component;
 import rag_worker.Service.RAGIndexingService;
@@ -19,7 +18,7 @@ import static rag_worker.Configuration.MessageBrokerConfig.PDF_QUEUE;
 @Slf4j
 public class PDFIngestConsumer {
     private final RAGIndexingService indexingService;
-    private StatusUpdatePublisher publisher;
+    private final StatusUpdatePublisher publisher;
 
     @RabbitListener(queues = PDF_QUEUE)
     public void consume(PDFIngestMessage message){

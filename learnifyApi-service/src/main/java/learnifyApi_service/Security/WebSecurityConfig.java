@@ -50,7 +50,10 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/materials/**").authenticated()
+                        .requestMatchers("/chat/**").authenticated()
+                        .requestMatchers("/quiz/**").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(u -> u.userService(customOAuth2UserService))

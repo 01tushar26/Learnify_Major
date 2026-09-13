@@ -1,421 +1,181 @@
-# Learnify — AI-Powered Teaching Assistant
+# Learnify - Turn any video or PDF into a tutor
 
-> Upload any PDF or lecture video and instantly chat with it, generate quizzes, and test your knowledge — all powered by RAG (Retrieval-Augmented Generation).
+Learnify is a distributed learning platform that ingests lecture videos and PDFs, transcribes and indexes them into a vector store, and lets you chat with your material or auto-generate quizzes from it — all backed by an async, queue-driven microservice architecture.
 
----
+**Live Demo:** _coming soon_
 
-## What is Learnify?
+[//]: # (<p align="center">)
 
-Learnify is an AI teaching assistant built with **Spring Boot + Spring AI**. It lets you upload any educational document (textbook, lecture notes, research paper) or video lecture and interact with it intelligently — no manual searching, no re-watching entire videos.
+[//]: # (  <img src="assets/home.png" alt="Learnify Architecture" width="1344"/>)
 
-The system is built on a **Retrieval-Augmented Generation (RAG)** pipeline that grounds every answer strictly in your uploaded content. The LLM is explicitly instructed to respond with "I don't know" when the answer is not present in the document — hallucination is not an option.
+[//]: # (</p>)
+
+[//]: # ()
+[//]: # (<p align="center">)
+
+[//]: # (  <img src="assets/chat.png" alt="Learnify Architecture" width="1672"/>)
+
+[//]: # (</p>)
+
+[//]: # (<p align="center">)
+
+[//]: # (  <img src="assets/quiz.png" alt="Learnify Architecture" width="1672"/>)
+
+[//]: # (</p>)
 
 ---
 
 ## Features
 
-### Document Chat
-Ask any natural-language question about an ingested document and receive a precise, grounded answer. The system performs a cosine similarity search over the vector store filtered by filename, injects the top-4 most relevant chunks into the prompt, and returns an answer that cites only what is in the document.
 
-### Multilingual Video Lecture Ingestion
-Upload any video lecture in `.mp4`, `.mkv`, `.avi`, or `.mov` format (up to 500 MB). A dedicated Python microservice extracts the audio track with FFmpeg and transcribes it using **Groq Whisper** (`whisper-large-v3`). The transcription service supports **99 languages** — non-English lectures are automatically translated to English before ingestion so the entire RAG pipeline works regardless of the source language. Large videos are automatically split into 10-minute chunks to stay within Groq's API limits, and timestamps are preserved and stitched across chunks.
 
-### Asynchronous Processing with Job Tracking
-Video ingestion is fully non-blocking. Uploads are published to a **RabbitMQ** queue and processed in the background. Each job has a unique `jobId` and transitions through four states: `QUEUED → PROCESSING → DONE / FAILED`. Clients poll `GET /rag/video/status/{jobId}` to track progress. Duplicate uploads are detected and return `409 Conflict` with the existing job details.
+- **Document Chat** — ask any natural-language question about an ingested material; performs cosine similarity search over the vector store filtered by `materialId`, injects the top-4 most relevant chunks into the prompt, and returns an answer grounded strictly in that document
+- **Multilingual Video Lecture Ingestion** — upload lecture video in `.mp4`, `.mkv`, `.avi`, or `.mov` format (up to 500 MB); a dedicated Python microservice extracts audio with FFmpeg and transcribes it via **Groq Whisper** (`whisper-large-v3`), supporting 99 languages with automatic translation to English before ingestion
+- **Chunked Transcription for Long Videos** — large videos are automatically split into 10-minute chunks to stay within Groq's API limits, with timestamps preserved and stitched across chunks
+- **Asynchronous Processing with Job Tracking** — uploads are published to a **RabbitMQ** queue and processed in the background; each material has a unique `jobId` and transitions through `QUEUED → PROCESSING → DONE / FAILED`, pollable via `GET /materials/{id}/status`
+- **Duplicate Upload Detection** — re-uploading the same filename for the same user returns `409 Conflict` with the existing job's details
+- **PDF Ingestion** — parsed page-by-page, cleaned of encoding artifacts and whitespace noise, then chunked into 800-token segments tagged with `materialId`, source file, page number, and timestamp
+- **Local Embeddings via Ollama** — all chunks are embedded using **Ollama** (`nomic-embed-text`) and stored in PostgreSQL with the pgvector extension
+- **MCQ Quiz Generation** — retrieves up to 8 relevant chunks filtered to a similarity score above 0.75, and instructs the LLM to produce a structured JSON array of questions, each with four options (A–D), a correct answer label, and an explanation
+- **Interactive Quiz Taking** — select answers, submit, and get instant feedback: correct options highlight green, wrong choices red, unanswered questions reveal the correct answer, with a per-question explanation and a score banner
+- **Quiz History** — generated quizzes are persisted and retrievable later via `GET /quiz/{id}` for review
+- **Google OAuth2 Authentication** — no passwords; sign-in via Google, with short-lived access tokens and long-lived (6-month) refresh tokens rotated on every use, stored in an HttpOnly cookie
+- **Per-User Data Isolation** — every material, quiz, and vector chunk is scoped to the owning user; ownership is enforced at the service layer before any cross-service call
+- **Semantic Search Microservice** — `rag-worker` exposes an internal-only `/internal/search` endpoint, keeping all embedding and vector-store logic in one place, never exposed publicly
+- **Decoupled Status Reporting** — worker services have no direct database access; they report status changes back to `learnify-api` over a dedicated RabbitMQ queue, the only service that writes to the `material` table
+- **Database-per-Service** — `learnify-api`'s relational data and `rag-worker`'s vector store live in separate Postgres databases, so no service can accidentally query another's tables
+- **RabbitMQ Topology Ownership** — each service only declares the queues/bindings it consumes, and only the bare exchange for anything it merely publishes to, avoiding first-boot race conditions
+- **Global Exception Handling** — custom exceptions (`ResourceNotFoundException`, `AccessDeniedException`, `DuplicateResourceException`) mapped to a consistent `ApiError` response (`message`, `httpStatus`, `timestamp`)
+- **Modular Service Architecture** — clean separation across API gateway, video worker, RAG worker, and transcription services
+- **Fully Containerized Stack** — Docker Compose orchestrates the API gateway, both worker services, the transcription service, PostgreSQL, and RabbitMQ as isolated, restart-safe services for one-command local setup
 
-### PDF Ingestion
-PDFs are parsed page-by-page, cleaned of encoding artifacts and whitespace noise, then chunked into 800-token segments with metadata tags for source file, page number, and timestamp. All chunks are embedded locally using **Ollama** (`nomic-embed-text`) and stored in PostgreSQL with the pgvector extension.
-
-### MCQ Quiz Generation
-Generate multiple choice quizzes on any topic from an ingested document. The system retrieves up to 8 relevant chunks, filters to those with a similarity score above 0.75, and instructs the LLM to produce a structured JSON array of questions — each with four options (A–D), a correct answer label, and an explanation. Quizzes are persisted in PostgreSQL.
-
-### Interactive Quiz Taking
-Select answers for each question, submit, and get instant feedback. Correct options turn green, wrong choices turn red, unanswered questions display the correct answer, and a per-question explanation appears. A score banner shows your result as a fraction and percentage. Past quizzes are saved in session history and can be reviewed at any time.
-
-### Consistent API Responses
-Every endpoint returns a standardised `ApiResponse<T>` envelope. Errors include a structured `ApiError` with `message`, `httpStatus`, and `timestamp` — the frontend reads these directly to display precise server error messages.
-
----
-
-## Architecture
-
-<p align="center">
-  <img src="assets/learnify architecture.png" alt="Learnify Architecture" width="1772"/>
-</p>
-<p align="center">
-  <img src="assets/transcriptionService.png" alt="Transcription Service" width="1772"/>
-</p>
-<p align="center">
-  <img src="assets/ragPipeline.png" alt="RAG Pipeline Architecture" width="1490"/>
-</p>
 
 ---
 
-## System Architecture
-
-Learnify is composed of two independent backend services, a vector database, a relational database, and a message broker.
-
-### 1. Spring Boot Backend (`learnify-backend`)
-The core Java service handles all REST API endpoints, the RAG pipeline, PDF ingestion, quiz generation, async job coordination, and RabbitMQ publishing and consuming. The chat LLM is **Groq** (`llama-3.1-8b-instant`) accessed via an OpenAI-compatible client. Embeddings are generated by **Ollama** running on the host machine at `host.docker.internal:11434`.
-
-### 2. Python Transcription Service (`transcription-service`)
-A lightweight FastAPI microservice responsible solely for audio extraction and speech recognition. It accepts video uploads at `POST /transcribe`, runs FFmpeg to produce a 16 kHz mono WAV file, splits files larger than 20 MB into 10-minute chunks, and calls the Groq Whisper API with translation mode enabled by default.
-
----
 
 ## Tech Stack
 
+
 | Layer | Technology |
 |---|---|
-| Backend Framework | Spring Boot 3.x |
-| AI Orchestration | Spring AI |
-| LLM — Chat & Quiz | Groq (`llama-3.1-8b-instant`) via OpenAI-compatible API |
-| LLM — Transcription | Groq Whisper (`whisper-large-v3`) |
-| Embedding Model | Ollama — `nomic-embed-text` (runs locally on host) |
-| Vector Store | PostgreSQL 16 + pgvector (HNSW index, COSINE distance, 768 dims) |
-| Message Broker | RabbitMQ 3 with Management Plugin |
-| Transcription Service | FastAPI (Python 3.x) |
-| Audio Extraction | FFmpeg |
-| PDF Parsing | Spring AI `PagePdfDocumentReader` |
-| ORM | Spring Data JPA / Hibernate |
-| Object Mapping | ModelMapper + Jackson |
-| Frontend | React + Vite |
-| Containerisation | Docker + Docker Compose |
+| Frontend | React |
+| API Gateway | Spring Boot (`learnify-api`) |
+| Video Worker | Spring Boot (`video-worker`) |
+| RAG Worker | Spring Boot (`rag-worker`) |
+| Transcription Service | Python (Groq Whisper, FFmpeg) |
+| Messaging | RabbitMQ |
+| Database | PostgreSQL (Spring Data JPA) |
+| Vector Database | PostgreSQL + pgvector (Spring AI Vector Store) |
+| Embeddings | Ollama (`nomic-embed-text`) |
+| LLM (Chat / Quiz) | Groq (OpenAI-compatible API) |
+| Auth | Google OAuth2 + JWT (access + HttpOnly refresh cookie) |
+| Containerization | Docker, Docker Compose |
 
 ---
 
-## Prerequisites
+[//]: # (## Architecture)
 
-Before running the project, install the following on your machine:
+[//]: # ()
+[//]: # ()
+[//]: # (---)
 
-**1. Docker Desktop**
-Download and install from [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop). This runs PostgreSQL, RabbitMQ, the Spring Boot backend, and the Python transcription service — all in containers.
 
-**2. Ollama**
-Download and install from [https://ollama.com/download](https://ollama.com/download). Ollama runs **on your host machine** (not inside Docker) and provides the embedding model. After installing, pull the required model:
-
-```bash
-ollama pull nomic-embed-text
-```
-
-Make sure Ollama is running before starting Docker Compose. The backend reaches it via `host.docker.internal:11434`.
-
-**3. Groq API Key**
-Sign up for a free key at [https://console.groq.com](https://console.groq.com). This key is used for both the chat LLM (`llama-3.1-8b-instant`) and the Whisper transcription model (`whisper-large-v3`).
-
-**4. Node.js 18+ and npm**
-Required only for the frontend. Download from [https://nodejs.org](https://nodejs.org).
-
----
-
-## Running the Project
-
-### Step 1 — Clone the Repository
-
-```bash
-git clone https://github.com/your-username/learnify.git
-cd learnify
-```
-
----
-
-### Step 2 — Build the Spring Boot Backend Image
-
-```bash
-# Navigate into the server folder
-cd server
-
-# Build the JAR
-./mvnw clean package -DskipTests
-
-# Build the Docker image (Dockerfile is inside server/)
-docker build -t learnify-backend:prod .
-
-# Go back to the project root
-cd ..
-```
-
-> **Windows users:** Use `mvnw.cmd clean package -DskipTests` if `./mvnw` does not work.
-
----
-
-### Step 3 — Build the Transcription Service Image
-
-```bash
-cd transcript-server
-docker build -t transcription-service:latest .
-cd ..
-```
-
----
-
-### Step 4 — Create the `.env` File
-
-Copy the example file and fill in your credentials:
-
-```bash
-cp .env.example .env
-```
-
-Open `.env` and set the following values:
-
-```env
-# PostgreSQL password — choose any strong password
-DB_PASSWORD=your_postgres_password
-
-# Groq API key — from https://console.groq.com
-GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# RabbitMQ password — choose any password
-RABBITMQ_PASSWORD=your_rabbitmq_password
-
-# Active Spring profile — must be "prod" for Docker deployment
-SPRING_PROFILES_ACTIVE=prod
-```
-
-> The `SPRING_PROFILES_ACTIVE=prod` value activates `application-prod.properties`, which configures the database URL, pgvector settings, RabbitMQ host, and Ollama base URL correctly for the Docker environment.
-
----
-
-### Step 5 — Start All Services
-
-```bash
-docker-compose up -d
-```
-
-This starts four containers:
-
-| Container | Service | Port |
-|---|---|---|
-| `ragdb` | PostgreSQL 16 + pgvector | `5433` |
-| `ragmq` | RabbitMQ + Management UI | `5672`, `15672` |
-| `learnify-rag-server` | Spring Boot backend | `8080` |
-| `learnify-transcript-server` | Python transcription service | `8000` |
-
-Wait 30–60 seconds for Spring Boot to finish starting. Check logs if needed:
-
-```bash
-docker-compose logs -f server
-```
-
-When you see `Started LearnifyApplication in X.XXX seconds` the backend is ready.
-
-**Verify everything is healthy:**
-
-```bash
-# Backend
-curl http://localhost:8080/actuator/health
-
-# Transcription service
-curl http://localhost:8000/health
-# Expected: {"status":"ok","model":"whisper-large-v3"}
-```
-
-RabbitMQ management UI is available at [http://localhost:15672](http://localhost:15672) with username `guest` and the password you set in `RABBITMQ_PASSWORD`.
-
----
-
-### Step 6 — Run the Frontend
-
-Open a new terminal (keep Docker Compose running):
-
-```bash
-cd Client
-npm install
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
----
-
-### Stopping Everything
-
-```bash
-# Stop all containers, keep database data
-docker-compose down
-
-# Stop all containers and delete all data
-docker-compose down -v
-```
-
----
-
-## Project Structure
-
-```
-learnify/
-├── assets/                               # Architecture diagrams for README
-├── Client/                               # React + Vite frontend
-├── server/                               # Spring Boot application
-│   ├── Dockerfile                        # Spring Boot image build
-│   └── src/main/java/com/LearnifyMajor/server/
-│       ├── Controller/
-│       │   ├── ChatController.java       # POST /api/chat
-│       │   ├── QuizController.java       # POST /quiz/generate
-│       │   ├── RagController.java        # POST /rag/ingestPdf, /rag/ingestVideo
-│       │   └── TranscriptController.java # POST /video/transcript (debug)
-│       ├── Service/
-│       │   ├── RagService.java           # Core RAG: chunking, storing, answering
-│       │   ├── IngestServiceImpl.java    # PDF + video ingestion orchestration
-│       │   ├── QuizService.java          # MCQ quiz generation via LLM
-│       │   └── VideoService.java         # Job status lookup
-│       ├── Message/
-│       │   ├── BrokerRabbitMQConfig.java
-│       │   ├── VideoIngestMessage.java
-│       │   ├── VideoIngestPublisher.java
-│       │   ├── VideoIngestConsumer.java
-│       │   └── ByteArrayMultipartFileConverter.java
-│       ├── Client/
-│       │   ├── TranscriptionClientService.java
-│       │   ├── TranscriptionRestClientResponse.java
-│       │   └── RestclientConfig.java
-│       ├── Config/
-│       │   ├── AppConfig.java
-│       │   ├── ModelMapperConfig.java
-│       │   └── MapperConfig.java
-│       ├── Entity/
-│       │   ├── Video.java
-│       │   ├── VideoStatus.java
-│       │   ├── QuizEntity.java
-│       │   └── QuestionEntity.java
-│       └── Advice/
-│           ├── GlobalResponseHandler.java
-│           ├── GlobalExceptionHandler.java
-│           ├── ApiResponse.java
-│           └── ApiError.java
-│
-├── transcript-server/                    # Python FastAPI microservice
-│   ├── controller.py
-│   ├── transcription_service.py
-│   ├── Requirement.txt
-│   └── Dockerfile
-│
-├── .env                                  # Your local secrets (never commit)
-├── .env.dev                              # Dev environment overrides
-├── .env.example                          # Template — copy this to .env
-├── .gitignore
-├── docker-compose.yml                    # Production: all 4 services
-├── docker-compose-dev.yml                # Dev: infra + transcript-server only
-└── README.md
-```
-
----
 
 ## API Reference
 
-### Ingestion
+### Auth — `/auth`
 
 | Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/rag/ingestPdf` | Upload PDF — `multipart/form-data`, field `file` |
-| `POST` | `/rag/ingestVideo` | Queue video for async ingestion — `multipart/form-data`, field `file` |
-| `GET` | `/rag/video/status/{jobId}` | Poll job status |
-
-### Chat
-
-| Method | Endpoint | Body |
-|---|---|---|
-| `POST` | `/api/chat` | `{ "question": "...", "fileName": "..." }` |
-
-### Quiz
-
-| Method | Endpoint | Body |
-|---|---|---|
-| `POST` | `/quiz/generate` | `{ "topic": "...", "fileName": "...", "numberOfQuestions": 5 }` |
-
-### Python Transcription Service
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/transcribe` | Accepts video, returns transcript + timestamped segments |
-| `GET` | `/health` | Health check |
-
-All responses are wrapped in:
-
-```json
-{
-  "data": { ... },
-  "time": "2026-06-11T10:30:00",
-  "error": null
-}
-```
+|--------|----------|-------------|
+| `GET` | `/oauth2/authorization/google` | Start Google OAuth2 login |
+| `POST` | `/auth/refresh` | Rotate access + refresh token (refresh token read from cookie) |
+| `POST` | `/auth/logout` | Revoke refresh token + clear cookie |
 
 ---
 
-## Common Issues
+### Materials — `/materials`
 
-**`./mvnw: Permission denied`**
-Run `chmod +x mvnw` then retry.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/materials/video` | Upload a video; queues transcription + indexing |
+| `POST` | `/materials/pdf` | Upload a PDF; queues parsing + indexing |
+| `GET` | `/materials/{id}/status` | Poll ingestion status for a material |
+| `GET` | `/materials` | List all materials owned by the current user |
 
-**Spring Boot container exits immediately**
-The `depends_on` in `docker-compose.yml` waits for containers to start, not for the services inside them to be fully ready. If PostgreSQL or RabbitMQ are still initialising, restart the backend container after a few seconds:
+---
+
+### Chat — `/chat`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/chat` | Ask a question about a specific material (`{ question, materialId }`) |
+
+---
+
+### Quiz — `/quiz`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/quiz/generate` | Generate a quiz from a material (`{ topic, materialId, numberOfQuestions }`) |
+| `GET` | `/quiz/{id}` | Fetch a previously generated quiz |
+
+---
+
+### Internal — service-to-service only, not publicly exposed
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/internal/search` | `rag-worker`'s semantic search endpoint, called only by `learnify-api` |
+
+---
+
+## Running Locally
+
+> Requires **Docker** and **Docker Compose** to be installed.
+
+1. **Create the `.env` file**
+
+   ```bash
+   cp example.env .env
+   ```
+
+   Fill in the following variables:
+
+   | Variable | Description |
+      |---|---|
+   | `DB_PASSWORD` | PostgreSQL password |
+   | `RABBITMQ_PASSWORD` | RabbitMQ password |
+   | `JWT_SECRETKEY` | Secret key used to sign JWT tokens |
+   | `GOOGLE_CLIENT_ID` | Google OAuth2 client ID |
+   | `GOOGLE_CLIENT_SECRET` | Google OAuth2 client secret |
+   | `GROQ_API_KEY` | Groq API key (chat/quiz generation + transcription) |
+   | `TRANSCRIPTION_WORKER_URL` | Transcription service URL (use the Compose service name, e.g. `http://transcript-server:8000`) |
+   | `FRONTEND_URL` | Frontend origin for OAuth redirect and CORS |
+
+2. **Build each service image**
+
+   ```bash
+   cd learnify-api && docker build -t learnifyapi-service:latest . && cd ..
+   cd video-worker && docker build -t video-worker:latest . && cd ..
+   cd rag-worker && docker build -t rag-worker:latest . && cd ..
+   ```
+
+3. **Run the stack**
+
+   ```bash
+   docker-compose -f docker-compose.yml up -d --build
+   ```
+
+4. **Access the app**
+
+    - Frontend: http://localhost:5173
+    - Backend: http://localhost:8080/api/v1
+    - RabbitMQ Management UI: http://localhost:15672
+
+Stop everything with:
+
 ```bash
-docker-compose restart server
+docker-compose -f docker-compose.yml down
 ```
 
-**Embeddings failing / Ollama connection refused**
-Make sure Ollama is running on your host machine before starting Docker Compose. The backend connects to it via `host.docker.internal:11434`. On Linux, verify that `extra_hosts: host.docker.internal:host-gateway` is present in the `server` service in `docker-compose.yml` — it is already configured.
-
-**`GROQ_API_KEY environment variable is not set`**
-The transcription container reads this at startup from the `.env` file. Make sure the `.env` file is in the same directory as `docker-compose.yml` and the key has no extra spaces or quotes around it.
-
-**Frontend CORS error**
-The backend controllers are annotated with `@CrossOrigin(origins = "http://localhost:5173")`. If Vite starts on a different port, update that annotation in `ChatController`, `QuizController`, and `RagController` to match, and update the `API` constant at the top of `Client/src/App.jsx`.
-
-**Port conflict**
-If ports `8080`, `5433`, or `5672` are already in use, edit the left-hand port in `docker-compose.yml` (e.g. `"8081:8080"`) and update the frontend `API` constant accordingly.
-
 ---
-
-## Future Enhancements
-
-### Authentication and Multi-Tenancy
-Adding JWT-based user authentication and embedding a `userId` in every vector store chunk would make Learnify a true multi-tenant platform where each user sees only their own uploaded content.
-
-### Timestamp-Linked Answers for Video Lectures
-The system already has timestamped segments from Whisper. A future version would surface the exact timestamp alongside every answer and render a clickable link that jumps the user to that precise moment in the original lecture.
-
-### Multi-Document Knowledge Base
-Allow users to group multiple documents into a named knowledge base and query across all of them simultaneously for richer, cross-source learning.
-
-### Hybrid Search (Keyword + Semantic)
-Combining the current vector search with BM25 keyword search via reciprocal rank fusion would improve recall for exact-match queries such as specific variable names, theorem names, or technical terms.
-
-### Multi-Source Reasoning
-An advanced RAG mode where the LLM synthesises, compares, or contrasts information retrieved from multiple documents — useful for students reading multiple papers on the same topic.
-
-### Personalized and Adaptive Quizzes
-Track questions a user answered incorrectly and generate follow-up quizzes that specifically target those weak areas, building a per-user knowledge profile over time.
-
-### Flashcard Generation
-Automatically generate flashcard pairs (term → definition) from ingested content following a spaced repetition schedule.
-
-### Adaptive Learning Recommendations
-After a quiz session, recommend specific document sections to re-read based on which topics the user struggled with.
-
-### Knowledge Gap Detection
-Compare quiz performance against the full topic coverage of an ingested document and surface a coverage map showing which areas remain unreviewed — a strong tool for exam preparation.
-
-### Dead-Letter Queue and Retry Logic
-Configuring a RabbitMQ dead-letter queue with exponential back-off retry would allow transient failures to resolve automatically without manual re-upload.
-
----
-
-## Known Limitations
-
-- No user authentication — all ingested documents are accessible to any client
-- No file existence pre-check before chat or quiz requests
-- Quiz correct answers are included in the API response at generation time
-- `TranscriptionRestClientResponse.segmentList` field name does not match the Python response key `segments` — requires `@JsonProperty("segments")` to map correctly
-- No dead-letter queue — failed RabbitMQ jobs require manual re-upload
-
----
-
-## Live Demo
-
-Coming soon.
-
----
-
-*Built with Spring Boot · Spring AI · Groq · Ollama · pgvector · RabbitMQ · FastAPI · React*

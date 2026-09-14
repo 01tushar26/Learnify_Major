@@ -52,4 +52,4 @@ function AuthDialog({ open, onOpenChange }) {
   )
 }
 
-export default AuthDialog
+export default AuthDialog ;

@@ -1,8 +1,7 @@
 import React from 'react'
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { AuthDialog } from "@/components/AuthDialog";
-
+import AuthDialog from "@/components/AuthDialog";
 function LandingPage() {
     const [authOpen, setAuthOpen] = useState(false);
   return (

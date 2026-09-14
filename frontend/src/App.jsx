@@ -3,9 +3,9 @@ import { Route, Routes } from 'react-router-dom'
 import './App.css'
 import { Toaster } from 'sonner'
 import LandingPage from "@/pages/LandingPage";
-import OAuthSuccessPage from "@/pages/OAuthSuccessPage";
-import DashboardPage from "@/pages/DashBoardPage";
-import MaterialDetailPage from "@/pages/MaterialDetailsPage";
+// import OAuthSuccessPage from "@/pages/OAuthSuccessPage";
+// import DashboardPage from "@/pages/DashBoardPage";
+// import MaterialDetailPage from "@/pages/MaterialDetailsPage";
 
 function App() {
 
@@ -13,9 +13,9 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<LandingPage/>} />
-        <Route path="/oauth-success" element={<OAuthSuccessPage />} />
+        {/* <Route path="/oauth-success" element={<OAuthSuccessPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/materials/:id" element={<MaterialDetailPage />} />
+        <Route path="/materials/:id" element={<MaterialDetailPage />} /> */}
       </Routes>
       <Toaster theme="dark" position="top-center" />
     </>

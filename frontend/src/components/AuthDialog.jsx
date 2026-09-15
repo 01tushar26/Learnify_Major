@@ -4,8 +4,8 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/Dialog";
-import { Button } from "@/components/ui/Button";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 
 function GoogleIcon() {

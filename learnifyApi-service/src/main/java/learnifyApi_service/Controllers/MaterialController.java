@@ -44,4 +44,9 @@ public class MaterialController {
          List<MaterialDTO> dto = materialService.getMyMaterial();
          return ResponseEntity.status(HttpStatus.OK).body(dto);
      }
+     @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMaterial(@PathVariable Long id){
+         materialService.deleteMaterial(id);
+         return ResponseEntity.noContent().build();
+     }
 }

@@ -24,6 +24,11 @@ public class MessageQueueConfig {
     public static final String PDF_EXCHANGE = "pdf.ingest.exchange";
     public static final String PDF_ROUTING_KEY = "pdf.ingest";
 
+    public static final String MATERIAL_DELETED_EXCHANGE = "material.deleted.exchange";
+    public static final String MATERIAL_DELETED_ROUTING_KEY = "material.deleted";
+
+
+
 
     // learnify-api CONSUMES here. video-worker (and later rag-worker, for final DONE) publish.
     // -> Full declaration: exchange + queue + binding, since this service owns the listener.
@@ -52,6 +57,10 @@ public class MessageQueueConfig {
     @Bean
     public Queue statusQueue() {
         return QueueBuilder.durable(STATUS_QUEUE).build();
+    }
+    @Bean
+    public DirectExchange materialDeletedExchange() {
+        return new DirectExchange(MATERIAL_DELETED_EXCHANGE);
     }
 
     @Bean

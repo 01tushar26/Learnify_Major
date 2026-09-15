@@ -7,4 +7,6 @@ import java.util.List;
 public interface MaterialService {
     public MaterialDTO getStatus(Long materialId);
     public List<MaterialDTO> getMyMaterial();
+
+    void deleteMaterial(Long id);
 }

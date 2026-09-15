@@ -4,6 +4,7 @@ import learnifyApi_service.DTOs.MaterialDTO;
 import learnifyApi_service.Entities.Material;
 import learnifyApi_service.Entities.User;
 import learnifyApi_service.Exceptions.ResourceNotFoundException;
+import learnifyApi_service.MessageBroker.MaterialDeletedPublisher;
 import learnifyApi_service.Repositories.MaterialRepository;
 import learnifyApi_service.Util.Util;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.List;
 public class MaterialServiceImpl implements MaterialService {
     private final ModelMapper mapper;
     private final MaterialRepository repository;
+    private final MaterialDeletedPublisher publisher;
 
     @Override
     public MaterialDTO getStatus(Long materialId) {
@@ -40,5 +42,20 @@ public class MaterialServiceImpl implements MaterialService {
         return materials.stream()
                 .map(a -> mapper.map(a, MaterialDTO.class))
                 .toList();
+    }
+
+    @Override
+    public void deleteMaterial(Long id) {
+        User user = Util.getAuthenticatedUser();
+        Material material = repository.findById(id).orElseThrow(
+                ()->new ResourceNotFoundException("Material Not found with id -"+id)
+        );
+        if(!user.getId().equals(material.getUser().getId())){
+            throw new AccessDeniedException("You cannot delete this material");
+        }
+
+        repository.delete(material);
+        publisher.publish(id);
+
     }
 }

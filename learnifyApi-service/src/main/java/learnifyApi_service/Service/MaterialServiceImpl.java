@@ -1,6 +1,7 @@
 package learnifyApi_service.Service;
 
 import learnifyApi_service.DTOs.MaterialDTO;
+import learnifyApi_service.Entities.Enums.IngestStatus;
 import learnifyApi_service.Entities.Material;
 import learnifyApi_service.Entities.User;
 import learnifyApi_service.Exceptions.ResourceNotFoundException;
@@ -52,6 +53,9 @@ public class MaterialServiceImpl implements MaterialService {
         );
         if(!user.getId().equals(material.getUser().getId())){
             throw new AccessDeniedException("You cannot delete this material");
+        }
+        if(material.getStatus() != IngestStatus.DONE){
+            throw  new RuntimeException("You only deleted material with status DONE ");
         }
 
         repository.delete(material);

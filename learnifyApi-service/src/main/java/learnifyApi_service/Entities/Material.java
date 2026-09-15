@@ -18,6 +18,12 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@Table(
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_material_filename_user",
+                columnNames = {"file_name", "user_id"}
+        )
+)
 public class Material {
 
     @Id

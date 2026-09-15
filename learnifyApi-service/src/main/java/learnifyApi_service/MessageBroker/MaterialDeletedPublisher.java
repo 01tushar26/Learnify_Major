@@ -22,5 +22,7 @@ public class MaterialDeletedPublisher {
                 MATERIAL_DELETED_ROUTING_KEY,
                 new MaterialDeletedMessage(materialId)
         );
+        log.info("Material with id- {} deleted message pushed in a queue", materialId);
+
     }
 }

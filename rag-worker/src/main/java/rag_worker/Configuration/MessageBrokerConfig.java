@@ -20,6 +20,12 @@ public class MessageBrokerConfig {
     public static final String RAG_EXCHANGE    = "rag.ingest.exchange";
     public static final String RAG_ROUTING_KEY = "rag.ingest";
 
+    public static final String MATERIAL_DELETED_QUEUE       = "material.deleted.queue";
+    public static final String MATERIAL_DELETED_EXCHANGE    = "material.deleted.exchange";
+    public static final String MATERIAL_DELETED_ROUTING_KEY = "material.deleted";
+
+
+
     // --- Status: publish-only ---
     public static final String STATUS_EXCHANGE    = "video.status.exchange";
     public static final String STATUS_ROUTING_KEY = "video.status";
@@ -59,6 +65,20 @@ public class MessageBrokerConfig {
         return new DirectExchange(STATUS_EXCHANGE);
     }
 
+    @Bean
+    public DirectExchange materialDeletedExchange() {
+        return new DirectExchange(MATERIAL_DELETED_EXCHANGE);
+    }
+
+    @Bean
+    public Queue materialDeletedQueue() {
+        return QueueBuilder.durable(MATERIAL_DELETED_QUEUE).build();
+    }
+
+    @Bean
+    public Binding materialDeletedBinding() {
+        return BindingBuilder.bind(materialDeletedQueue()).to(materialDeletedExchange()).with(MATERIAL_DELETED_ROUTING_KEY);
+    }
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();

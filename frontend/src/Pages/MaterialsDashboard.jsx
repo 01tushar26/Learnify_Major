@@ -72,50 +72,7 @@ export default function MaterialsDashboard() {
   };
 
   useEffect(() => {
-    setMaterials([{
-    id: "1",
-    fileName: "Organic Chemistry - Chapter 7.pdf",
-    materialType: "PDF",
-    status: "COMPLETED",
-    createdAt: "2026-09-10T14:32:00Z",
-  },
-  {
-    id: "2",
-    fileName: "Week 3 Lecture Recording.mp4",
-    materialType: "VIDEO",
-    status: "PROCESSING",
-    createdAt: "2026-09-14T09:05:00Z",
-    progress: 62,
-  },
-  {
-    id: "3",
-    fileName: "Linear Algebra Notes.pdf",
-    materialType: "PDF",
-    status: "PENDING",
-    createdAt: "2026-09-15T08:15:00Z",
-  },
-  {
-    id: "4",
-    fileName: "Cell Biology Seminar.mov",
-    materialType: "VIDEO",
-    status: "FAILED",
-    createdAt: "2026-09-13T18:47:00Z",
-    errorMessage: "File exceeded max duration (2hr). Trim and re-upload.",
-  },
-  {
-    id: "5",
-    fileName: "Thermodynamics Problem Set.pdf",
-    materialType: "PDF",
-    status: "COMPLETED",
-    createdAt: "2026-09-08T11:20:00Z",
-  },
-  {
-    id: "6",
-    fileName: "Guest Lecture - Dr. Nair.mp4",
-    materialType: "VIDEO",
-    status: "COMPLETED",
-    createdAt: "2026-09-05T16:00:00Z",
-  }])
+    setMaterials([])
     fetchMaterials();
   }, []);
 

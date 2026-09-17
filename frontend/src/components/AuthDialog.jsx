@@ -1,12 +1,12 @@
-import React from 'react'
+import React from 'react';
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
+  DialogHeader,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
 
 function GoogleIcon() {
   return (
@@ -19,37 +19,41 @@ function GoogleIcon() {
   );
 }
 
-function AuthDialog({ open, onOpenChange }) {
-    const handleGoogleLogin = () => {
+export default function AuthDialog({ open, onOpenChange }) {
+  const handleGoogleLogin = () => {
     window.location.href = "http://localhost:8080/api/v1/oauth2/authorization/google";
   };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="text-center">
-        <DialogTitle className="text-xl font-semibold text-accent">
-          Sign in to Learnify
-        </DialogTitle>
-        <DialogDescription className="mt-2 text-sm text-text-secondary">
-          Upload a lecture or PDF, then chat with it or generate a quiz — all
-          tied to your account.
-        </DialogDescription>
+      <DialogContent
+        showCloseButton
+        className="font-sans sm:max-w-md border border-zinc-800/80 bg-zinc-900 text-zinc-100 rounded-2xl shadow-2xl p-10 [&>button]:text-zinc-500 [&>button]:hover:text-zinc-200"
+      >
+        <DialogHeader class="flex flex-col items-center text-center space-y-3">
+          <DialogTitle className="text-2xl font-bold text-[#A5B4FC]">
+            Sign in to Learnify
+          </DialogTitle>
+          <DialogDescription className="text-sm text-zinc-400 max-w-sm leading-relaxed">
+          Upload PDFs, videos, and notes to instantly transcribe, index, and query your materials.
+          </DialogDescription>
+        </DialogHeader>
 
-        <p className="mt-6 text-xs text-text-muted">
-          We only use your Google account to identify you. Your materials
-          stay private to your account.
-        </p>
+        <div className="flex flex-col items-center text-center mt-2">
+          <p className="text-xs text-zinc-500 max-w-xs">
+            We only use your Google account to secure your session. Your uploaded materials remain private to your personal workspace.
+          </p>
 
-        <Button
-          variant="primary"
-          className="mt-6 w-full bg-white text-[#1f1f1f] hover:bg-white/90"
-          onClick={handleGoogleLogin}
-        >
-          <GoogleIcon />
-          Continue with Google
-        </Button>
+          <Button
+            type="button"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-indigo-200 active:scale-95 text-zinc-900 font-medium text-sm px-6 py-3 transition-all duration-200 shadow-lg w-full"
+            onClick={handleGoogleLogin}
+          >
+            <GoogleIcon />
+            Continue with Google
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
-export default AuthDialog ;

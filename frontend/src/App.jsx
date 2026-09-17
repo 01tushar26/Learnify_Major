@@ -14,6 +14,7 @@ function App() {
   return (
     <>
       <Routes>
+        <Route path="/" element={<LandingPage/>} />
         <Route path="/materials" element={<MaterialsDashboard/>} />
         
         {/* <Route path="/oauth-success" element={<OAuthSuccessPage />} />

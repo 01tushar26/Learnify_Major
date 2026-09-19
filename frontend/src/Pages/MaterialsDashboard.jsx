@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 import { toast, Toaster } from "sonner";
 import { FolderPlus, Upload } from "lucide-react";
+import axiosInstance from "@/lib/axios-instance";
 
 // --- Skeleton Card Component for Loading Grid ---
 function MaterialCardSkeleton() {
@@ -65,7 +66,7 @@ export default function MaterialsDashboard() {
   const fetchMaterials = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/materials");
+      const response = await axiosInstance.get("/materials");
       const data = response.data;
 
       const payload = data?.data ?? data;
@@ -85,24 +86,30 @@ export default function MaterialsDashboard() {
         description: getErrorMessage(error),
       });
       setMaterials([]);
+       setTimeout(() => navigate("/"), 1000);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
+ const handleLogout = async () => {
+  let serverLogoutFailed = false;
+
   try {
-    await axios.post("/auth/logout");
+    await axiosInstance.post("/auth/logout");
   } catch (error) {
-    toast.error("Failed to log out", {
-      description: getErrorMessage(error),
-    });
-    return ;
+    serverLogoutFailed = true;
+    console.warn("Server logout failed:", getErrorMessage(error));
+  } finally {
+    localStorage.removeItem("accessToken");
+    navigate("/", { replace: true });
   }
-  localStorage.removeItem("accessToken");
-  toast.success("Logged out successfully");
-  navigate("/");
-  
+
+  if (serverLogoutFailed) {
+    toast.info("Logged out on this device");
+  } else {
+    toast.success("Logged out successfully");
+  }
 };
 
   useEffect(() => {
@@ -119,7 +126,7 @@ export default function MaterialsDashboard() {
 
     try {
       setUploading(true);
-      const res = await axios.post(endpoint, formData, {
+      const res = await axiosInstance.post(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -141,7 +148,7 @@ export default function MaterialsDashboard() {
   // --- Handle Delete Material API DELETE /materials/{id} ---
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/materials/${id}`);
+      await axiosInstance.delete(`/materials/${id}`);
       setMaterials((prev) => prev.filter((item) => item.id !== id));
       toast.success("Material deleted successfully");
     } catch (error) {
@@ -228,7 +235,7 @@ export default function MaterialsDashboard() {
         </main>
       </div>
 
-      <Toaster theme="dark" richColors position="top-right" />
+      
     </TooltipProvider>
   );
 }

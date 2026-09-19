@@ -20,15 +20,16 @@ function GoogleIcon() {
 }
 
 export default function AuthDialog({ open, onOpenChange }) {
-  const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8080/api/v1/oauth2/authorization/google";
-  };
+const handleGoogleLogin = () => {
+  window.location.href = `${import.meta.env.VITE_BACKEND_URL}/oauth2/authorization/google`;
+};
 
   return (
+    
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton
-        className="font-sans sm:max-w-md border border-zinc-800/80 bg-zinc-900 text-zinc-100 rounded-2xl shadow-2xl p-10 [&>button]:text-zinc-500 [&>button]:hover:text-zinc-200"
+        className="font-sans sm:max-w-md !border-none !ring-0 bg-zinc-900 text-zinc-100 rounded-2xl shadow-2xl p-10 [&>button]:text-zinc-500 [&>button]:hover:text-zinc-200"
       >
         <DialogHeader class="flex flex-col items-center text-center space-y-3">
           <DialogTitle className="text-2xl font-bold text-indigo-300">

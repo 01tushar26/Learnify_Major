@@ -12,28 +12,32 @@ import { Plus, User, LogOut, Loader2, Sparkles } from "lucide-react";
 /**
  * Top navigation header for the Materials dashboard.
  */
-export default function Header({ uploading = false, onUploadClick , onLogout }) {
-
+export default function Header({ uploading = false, onUploadClick, onLogout }) {
   const handleLogout = () => {
-      onLogout();
-      return;
+    onLogout();
+    return;
   };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Highlighted Brand Logo & Name */}
-        <div className="flex items-center gap-3">
-          {/* <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/30 text-[#A5B4FC] shadow-sm shadow-indigo-500/10">
-            <Sparkles className="h-6 w-6" />
-          </div> */}
-          <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-100 to-[#A5B4FC] bg-clip-text text-transparent">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Brand Logo & Tagline Badge */}
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-100 to-[#A5B4FC] bg-clip-text text-transparent shrink-0">
             Learnify
           </span>
+
+          <div className="hidden sm:block h-4 w-px bg-zinc-800 shrink-0" />
+
+          {/* Indigo Tagline Badge */}
+          <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-[#A5B4FC] text-xs font-medium truncate">
+            
+            <span className="truncate">Stop rewatching. Start asking</span>
+          </div>
         </div>
 
         {/* Top Bar Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {/* Upload Button */}
           <button
             type="button"
@@ -77,8 +81,9 @@ export default function Header({ uploading = false, onUploadClick , onLogout }) 
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-zinc-800/80" />
               <DropdownMenuItem 
-              onClick={handleLogout}
-              className="text-rose-400 focus:bg-rose-500/10 focus:text-rose-300 cursor-pointer rounded-lg transition-colors">
+                onClick={handleLogout}
+                className="text-rose-400 focus:bg-rose-500/10 focus:text-rose-300 cursor-pointer rounded-lg transition-colors"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

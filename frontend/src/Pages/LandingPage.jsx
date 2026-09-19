@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Sparkles, ArrowRight, Play, FileText, Video } from "lucide-react";
 import AuthDialog from "@/components/AuthDialog";
+import dashboardImage from "@/assets/dashboard.png";
+
 
 // Reusable animated link component with a smooth 3D text flip effect on hover
 function FlippingNavLink({ href, children, onClick, textColor = "text-zinc-300", hoverColor = "text-white" }) {
@@ -32,7 +34,7 @@ export default function LandingPage() {
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-300/10 rounded-full blur-3xl pointer-events-none" />
 
       
-      {/* 1. UPDATED FLOATING CENTERED NAVBAR */}
+      {/* 1. FLOATING CENTERED NAVBAR */}
       <nav className="max-w-4xl mx-auto h-14 rounded-full border border-zinc-800 bg-[#191919] px-4 flex items-center justify-between sticky top-6 z-50 shadow-2xl shadow-black/80">
         
         {/* Left Circle Logo Badge */}
@@ -41,13 +43,6 @@ export default function LandingPage() {
             Learnify
           </span>
         </div>
-
-        {/* Center Nav Links with Smooth Text Flip */}
-        {/* <div className="hidden sm:flex items-center gap-8 px-4">
-          <FlippingNavLink href="#about">About</FlippingNavLink>
-          <FlippingNavLink href="#playground">Playground</FlippingNavLink>
-          <FlippingNavLink href="#resources">Resources</FlippingNavLink>
-        </div> */}
 
         {/* Right Action Button */}
         <div className="flex items-center gap-2">
@@ -70,19 +65,18 @@ export default function LandingPage() {
       <main className="max-w-5xl mx-auto text-center pt-20 pb-16 px-4">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-[#A5B4FC] text-xs font-medium w-fit mb-6 mx-auto">
-          
           <span>Stop rewatching. Start asking</span>
         </div>
 
-        {/* Headline: Exactly 2 lines with balanced responsive typography */}
+        {/* Headline */}
         <h1 className="font-brighta text-4xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-white leading-[1.15] max-w-5xl mx-auto">
-          3-hour tutorial? Turn it into  <br className="hidden sm:inline" />
+          Boring tutorials ? Turn it into <br className="hidden sm:inline" />
           <span className="bg-gradient-to-r from-[#A5B4FC] via-indigo-200 to-white bg-clip-text text-transparent">
             a personalized tutor.
           </span>
         </h1>
 
-        {/* Description: Centered alignment */}
+        {/* Description */}
         <p className="mt-6 text-lg sm:text-xl text-zinc-400 max-w-2xl font-normal leading-relaxed mx-auto text-center">
           No more pausing, rewinding, re-reading. Ask it questions, generate instant quizzes — Learnify handles the rest, grounded in exactly what you uploaded.
         </p>
@@ -106,6 +100,32 @@ export default function LandingPage() {
             Watch Demo
           </button>
         </div>
+    <br/><br/>
+    <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-indigo-500/30 via-indigo-300/20  blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+          
+         <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/90 rounded-t-xl border-b border-zinc-800/80">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-rose-500/80" />
+                <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+              </div>
+              
+              <div className="w-12" />
+            </div>
+
+            {/* Dashboard Image Shell */}
+            <div className="relative overflow-hidden rounded-b-xl bg-zinc-900">
+              <img
+                src={dashboardImage}
+                alt="Learnify Dashboard Preview"
+                className="w-full h-auto object-cover object-top transition-transform duration-700 group-hover:scale-105"
+              />
+              
+              {/* Subtle Overlay Reflection / Shimmer */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            </div>
+            
 
         {/* Feature Pills */}
         <div className="mt-12 flex items-center justify-center gap-6 text-xs text-zinc-500 border-t border-zinc-800/60 pt-6">
@@ -118,6 +138,12 @@ export default function LandingPage() {
             <span>Video Transcriptions</span>
           </div>
         </div>
+
+      
+           
+    
+        
+
       </main>
 
       {/* --- Footer / Showcase Strip --- */}

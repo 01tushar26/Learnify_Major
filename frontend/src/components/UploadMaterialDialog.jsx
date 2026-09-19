@@ -36,7 +36,7 @@ export default function UploadMaterialDialog({ open, onOpenChange, onFileSelecte
           <button
             type="button"
             onClick={() => pdfInputRef.current?.click()}
-            className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-300 hover:bg-indigo-200 active:scale-95 text-zinc-900 font-medium text-sm px-5 py-2.5 transition-all duration-200 shadow-lg shadow-purple-900/30"
+            className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-300 hover:bg-indigo-200 active:scale-95 text-zinc-900 font-medium text-sm px-5 py-2.5 transition-all duration-200 shadow-lg"
           >
             <FileText className="h-4 w-4" />
             Upload PDF
@@ -66,7 +66,7 @@ export default function UploadMaterialDialog({ open, onOpenChange, onFileSelecte
           <button
             type="button"
             onClick={() => videoInputRef.current?.click()}
-            className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-300 hover:bg-indigo-200 active:scale-95 text-zinc-900 font-medium text-sm px-5 py-2.5 transition-all duration-200 shadow-lg shadow-purple-900/30"
+            className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-300 hover:bg-indigo-200 active:scale-95 text-zinc-900 font-medium text-sm px-5 py-2.5 transition-all duration-200 shadow-lg "
           >
             <FileVideo className="h-4 w-4" />
             Upload Video

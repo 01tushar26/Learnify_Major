@@ -1,6 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Brighta&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
+
+
 
 @theme {
   --color-canvas: #121212;
@@ -19,4 +22,10 @@ body {
   background-color: var(--color-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+}
+
+
+/* Define custom Tailwind utility class */
+.font-brighta {
+  font-family: 'Brighta', cursive, sans-serif;
 }

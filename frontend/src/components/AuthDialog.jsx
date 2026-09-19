@@ -31,7 +31,7 @@ export default function AuthDialog({ open, onOpenChange }) {
         className="font-sans sm:max-w-md border border-zinc-800/80 bg-zinc-900 text-zinc-100 rounded-2xl shadow-2xl p-10 [&>button]:text-zinc-500 [&>button]:hover:text-zinc-200"
       >
         <DialogHeader class="flex flex-col items-center text-center space-y-3">
-          <DialogTitle className="text-2xl font-bold text-[#A5B4FC]">
+          <DialogTitle className="text-2xl font-bold text-indigo-300">
             Sign in to Learnify
           </DialogTitle>
           <DialogDescription className="text-sm text-zinc-400 max-w-sm leading-relaxed">

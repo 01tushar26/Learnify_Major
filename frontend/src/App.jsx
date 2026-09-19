@@ -1,7 +1,7 @@
 
 import { Route, Routes } from 'react-router-dom'
 import './App.css'
-import { Toaster } from 'sonner'
+
 import LandingPage from "@/pages/LandingPage";
 import { MaterialCard } from './components/MaterialCard';
 import MaterialsDashboard from './Pages/MaterialsDashboard';
@@ -21,7 +21,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/materials/:id" element={<MaterialDetailPage />} /> */}
       </Routes>
-      <Toaster theme="dark" position="top-center" />
+      
     </>
   )
 }

@@ -5,12 +5,15 @@ import Header from "@/components/Header";
 import UploadMaterialDialog from "@/components/UploadMaterialDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
+
+import { toast, Toaster } from "sonner";
 import { FolderPlus, Upload } from "lucide-react";
 
 // --- Skeleton Card Component for Loading Grid ---
 function MaterialCardSkeleton() {
   return (
-    <div className="w-full max-w-sm p-4 rounded-xl border border-purple-500/10 bg-zinc-950/60 backdrop-blur-md space-y-4">
+    <div className="w-full max-w-sm p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md space-y-4">
       {/* Header Skeleton */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 flex-1">
@@ -37,11 +40,26 @@ function MaterialCardSkeleton() {
   );
 }
 
+// --- Extract a human-readable message from a backend error response ---
+function getErrorMessage(error) {
+  const data = error?.response?.data;
+
+  if (data) {
+    if (data.error?.message) return data.error.message;
+    if (typeof data.error === "string") return data.error;
+  }
+
+  if (error?.message) return error.message;
+
+  return "Something went wrong. Please try again.";
+}
+
 export default function MaterialsDashboard() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const  navigate = useNavigate();
 
   // --- Fetch Materials from Backend API GET /materials ---
   const fetchMaterials = async () => {
@@ -50,35 +68,49 @@ export default function MaterialsDashboard() {
       const response = await axios.get("/materials");
       const data = response.data;
 
-      // Guard against non-array responses (e.g. { materials: [...] },
-      // { data: [...] }, an error envelope, or an unexpected shape) so
-      // materials.map() never crashes downstream.
-      if (Array.isArray(data)) {
-        setMaterials(data);
-      } else if (Array.isArray(data?.materials)) {
-        setMaterials(data.materials);
-      } else if (Array.isArray(data?.data)) {
-        setMaterials(data.data);
+      const payload = data?.data ?? data;
+
+      if (Array.isArray(payload)) {
+        setMaterials(payload);
+      } else if (Array.isArray(payload?.materials)) {
+        setMaterials(payload.materials);
       } else {
-        console.warn("Unexpected /materials response shape:", data);
+        toast.error("Couldn't load materials", {
+          description: "The server is down.",
+        });
         setMaterials([]);
       }
     } catch (error) {
-      console.error("Failed to fetch materials:");
+      toast.error("Failed to load materials", {
+        description: getErrorMessage(error),
+      });
       setMaterials([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleLogout = async () => {
+  try {
+    await axios.post("/auth/logout");
+  } catch (error) {
+    toast.error("Failed to log out", {
+      description: getErrorMessage(error),
+    });
+    return ;
+  }
+  localStorage.removeItem("accessToken");
+  toast.success("Logged out successfully");
+  navigate("/");
+  
+};
+
   useEffect(() => {
-    setMaterials([])
+    setMaterials([]);
     fetchMaterials();
   }, []);
 
   // --- Handle File Upload (PDF / Video) ---
-  // Called by UploadMaterialDialog once the person has picked a file for
-  // a specific material type — the dialog itself never touches the API.
   const handleFileUpload = async (file, materialType) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -90,9 +122,17 @@ export default function MaterialsDashboard() {
       const res = await axios.post(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setMaterials((prev) => [res.data, ...prev]);
+
+      const created = res.data?.data ?? res.data;
+      setMaterials((prev) => [created, ...prev]);
+
+      toast.success("Upload complete", {
+        description: `${file.name} was uploaded successfully !!`,
+      });
     } catch (error) {
-      console.error("Failed to upload material:", error);
+      toast.error("Upload failed", {
+        description: getErrorMessage(error),
+      });
     } finally {
       setUploading(false);
     }
@@ -103,15 +143,18 @@ export default function MaterialsDashboard() {
     try {
       await axios.delete(`/materials/${id}`);
       setMaterials((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Material deleted successfully");
     } catch (error) {
-      console.error("Failed to delete material:", error);
+      toast.error("Failed to delete material", {
+        description: getErrorMessage(error),
+      });
     }
   };
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-purple-500/30">
-        <Header uploading={uploading} onUploadClick={() => setUploadDialogOpen(true)} />
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-indigo-500/30">
+        <Header uploading={uploading} onUploadClick={() => setUploadDialogOpen(true)} onLogout={handleLogout}/>
 
         <UploadMaterialDialog
           open={uploadDialogOpen}
@@ -121,7 +164,7 @@ export default function MaterialsDashboard() {
 
         {/* --- Main Dashboard Content --- */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between mb-8">
+          {/* <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-semibold text-white tracking-tight">
                 My Materials
@@ -130,7 +173,7 @@ export default function MaterialsDashboard() {
                 Access and manage your uploaded PDFs and learning videos.
               </p>
             </div>
-          </div>
+          </div> */}
 
           {/* Loading Skeleton Grid */}
           {loading ? (
@@ -141,11 +184,11 @@ export default function MaterialsDashboard() {
             </div>
           ) : materials.length === 0 ? (
             /* Elegant Empty State Message */
-            <div className="flex flex-col items-center justify-center min-h-[380px] rounded-2xl border border-dashed border-purple-500/20 bg-zinc-900/20 p-8 text-center backdrop-blur-sm">
+            <div className="flex flex-col items-center justify-center min-h-[380px] rounded-2xl  bg-zinc-900/40 p-8 text-center backdrop-blur-sm">
               <div className="relative mb-5">
-                <div className="absolute -inset-1 rounded-full bg-purple-500/20 blur-md" />
-                <div className="relative p-4 rounded-2xl bg-zinc-900 border border-purple-500/30 text-purple-300 shadow-xl">
-                  <FolderPlus className="h-8 w-8 text-purple-400" />
+                <div className="absolute -inset-1 rounded-full bg-indigo-500/10 blur-md" />
+                <div className="relative p-4 rounded-2xl bg-zinc-900 border border-zinc-800/80 text-[#A5B4FC] shadow-xl">
+                  <FolderPlus className="h-8 w-8 text-[#A5B4FC]" />
                 </div>
               </div>
 
@@ -156,11 +199,10 @@ export default function MaterialsDashboard() {
                 Your learning workspace is empty. Drop a PDF document or a video file here to get started!
               </p>
 
-              {/* Same dialog-first flow as the header's + button, for consistency */}
               <button
                 type="button"
                 onClick={() => setUploadDialogOpen(true)}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-medium text-sm transition-all duration-200 shadow-lg shadow-purple-900/30"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-300 hover:bg-indigo-200 active:scale-95 text-zinc-900 font-medium text-sm transition-all duration-200 shadow-lg "
               >
                 <Upload className="h-4 w-4" />
                 <span>Upload First Material</span>
@@ -185,6 +227,8 @@ export default function MaterialsDashboard() {
           )}
         </main>
       </div>
+
+      <Toaster theme="dark" richColors position="top-right" />
     </TooltipProvider>
   );
 }

@@ -26,12 +26,12 @@ export default function LandingPage() {
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans selection:bg-indigo-500/30 py-6 px-4">
+    <div className="min-h-screen bg-black text-zinc-100 font-sans selection:bg-[#58A6FF]/30 py-6 px-4">
 
       {/* --- Ambient Background Glow & Dot Grid Overlay --- */}
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#383842_1px,transparent_1px)] [background-size:16px_16px]" />
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-300/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#58A6FF]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#58A6FF]/10 rounded-full blur-3xl pointer-events-none" />
 
       
       {/* 1. FLOATING CENTERED NAVBAR */}
@@ -39,7 +39,7 @@ export default function LandingPage() {
         
         {/* Left Circle Logo Badge */}
         <div className="flex items-center gap-3">
-          <span className="text-xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-100 to-[#A5B4FC] bg-clip-text text-transparent">
+          <span className="text-xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-100 to-[#58A6FF] bg-clip-text text-transparent">
             Learnify
           </span>
         </div>
@@ -64,14 +64,14 @@ export default function LandingPage() {
       {/* --- Main Hero Section --- */}
       <main className="max-w-5xl mx-auto text-center pt-20 pb-16 px-4">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-[#A5B4FC] text-xs font-medium w-fit mb-6 mx-auto">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#58A6FF]/20 bg-[#58A6FF]/10 text-[#58A6FF] text-xs font-medium w-fit mb-6 mx-auto">
           <span>Stop rewatching. Start asking</span>
         </div>
 
         {/* Headline */}
         <h1 className="font-brighta text-4xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-white leading-[1.15] max-w-5xl mx-auto">
           Boring tutorials ? Turn it into <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-[#A5B4FC] via-indigo-200 to-white bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#58A6FF] via-[#8FC4FF] to-white bg-clip-text text-transparent">
             a personalized tutor.
           </span>
         </h1>
@@ -86,7 +86,7 @@ export default function LandingPage() {
           <button
             type="button"
             onClick={() => setAuthOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-300 hover:bg-indigo-200 active:scale-95 text-zinc-900 font-semibold text-base px-6 py-3.5 transition-all duration-200 shadow-xl shadow-indigo-950/50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#58A6FF] hover:bg-[#79B8FF] active:scale-95 text-zinc-900 font-semibold text-base px-6 py-3.5 transition-all duration-200 shadow-xl shadow-[#1F6FEB]/50"
           >
             Get Started Free
             <ArrowRight className="h-5 w-5" />
@@ -96,12 +96,12 @@ export default function LandingPage() {
             type="button"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/80 text-zinc-200 font-medium text-base px-6 py-3.5 transition-all duration-200"
           >
-            <Play className="h-4 w-4 text-[#A5B4FC] fill-[#A5B4FC]" />
+            <Play className="h-4 w-4 text-[#58A6FF] fill-[#58A6FF]" />
             Watch Demo
           </button>
         </div>
     <br/><br/>
-    <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-indigo-500/30 via-indigo-300/20  blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+    <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-[#58A6FF]/30 via-[#58A6FF]/20  blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
           
          <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/90 rounded-t-xl border-b border-zinc-800/80">
@@ -130,11 +130,11 @@ export default function LandingPage() {
         {/* Feature Pills */}
         <div className="mt-12 flex items-center justify-center gap-6 text-xs text-zinc-500 border-t border-zinc-800/60 pt-6">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-[#A5B4FC]" />
+            <FileText className="h-4 w-4 text-[#58A6FF]" />
             <span>PDF Indexing</span>
           </div>
           <div className="flex items-center gap-2">
-            <Video className="h-4 w-4 text-[#A5B4FC]" />
+            <Video className="h-4 w-4 text-[#58A6FF]" />
             <span>Video Transcriptions</span>
           </div>
         </div>

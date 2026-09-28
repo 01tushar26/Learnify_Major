@@ -32,7 +32,7 @@ const handleGoogleLogin = () => {
         className="font-sans sm:max-w-md !border-none !ring-0 bg-zinc-900 text-zinc-100 rounded-2xl shadow-2xl p-10 [&>button]:text-zinc-500 [&>button]:hover:text-zinc-200"
       >
         <DialogHeader class="flex flex-col items-center text-center space-y-3">
-          <DialogTitle className="text-2xl font-bold text-indigo-300">
+          <DialogTitle className="text-2xl font-bold text-blue-300">
             Sign in to Learnify
           </DialogTitle>
           <DialogDescription className="text-sm text-zinc-400 max-w-sm leading-relaxed">
@@ -47,7 +47,7 @@ const handleGoogleLogin = () => {
 
           <Button
             type="button"
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-indigo-200 active:scale-95 text-zinc-900 font-medium text-sm px-6 py-3 transition-all duration-200 shadow-lg w-full"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-blue-200 active:scale-95 text-zinc-900 font-medium text-sm px-6 py-3 transition-all duration-200 shadow-lg w-full"
             onClick={handleGoogleLogin}
           >
             <GoogleIcon />

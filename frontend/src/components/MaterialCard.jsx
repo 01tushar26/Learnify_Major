@@ -21,7 +21,7 @@ import {
 const SpotlightCard = ({
   children,
   className = "",
-  spotlightColor = "rgba(165, 180, 252, 0.15)",
+  spotlightColor = "rgba(88, 166, 255, 0.15)",
 }) => {
   const divRef = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -42,7 +42,7 @@ const SpotlightCard = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative rounded-xl border border-indigo-500/20 bg-zinc-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-indigo-400/40 hover:shadow-xl hover:shadow-indigo-900/20 ${className}`}
+      className={`relative rounded-xl border border-[#58A6FF]/20 bg-zinc-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-[#58A6FF]/40 hover:shadow-xl hover:shadow-blue-900/20 ${className}`}
     >
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
@@ -58,8 +58,8 @@ const SpotlightCard = ({
 
 // --- Configurations & Helpers ---
 const typeConfig = {
-  VIDEO: { Icon: FileVideo, label: "Video Material", color: "text-[#A5B4FC]" },
-  PDF: { Icon: FileText, label: "PDF Document", color: "text-[#A5B4FC]" },
+  VIDEO: { Icon: FileVideo, label: "Video Material", color: "text-[#58A6FF]" },
+  PDF: { Icon: FileText, label: "PDF Document", color: "text-[#58A6FF]" },
 };
 
 const statusConfig = {
@@ -71,9 +71,9 @@ const statusConfig = {
   },
   PROCESSING: {
     label: "Processing",
-    badgeClass: "bg-indigo-950/50 text-[#A5B4FC] border-indigo-500/30",
+    badgeClass: "bg-blue-950/50 text-[#58A6FF] border-[#58A6FF]/30",
     Icon: Loader2,
-    iconClass: "animate-spin text-indigo-400",
+    iconClass: "animate-spin text-[#58A6FF]",
   },
   DONE: {
     label: "Completed",
@@ -130,13 +130,13 @@ export function MaterialCard({
             <div className="flex items-start justify-between gap-3">
               {/* File Icon & Info */}
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="p-2.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 shrink-0 shadow-inner">
-                  <TypeIcon className="h-5 w-5 text-[#A5B4FC]" />
+                <div className="p-2.5 rounded-lg bg-[#58A6FF]/10 border border-[#58A6FF]/20 shrink-0 shadow-inner">
+                  <TypeIcon className="h-5 w-5 text-[#58A6FF]" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <CardTitle className="text-sm font-medium text-zinc-100 truncate hover:text-[#A5B4FC] transition-colors duration-200 cursor-default">
+                      <CardTitle className="text-sm font-medium text-zinc-100 truncate hover:text-[#58A6FF] transition-colors duration-200 cursor-default">
                         {fileName}
                       </CardTitle>
                     </TooltipTrigger>
@@ -166,13 +166,13 @@ export function MaterialCard({
             {/* Progress Bar (Visible during PROCESSING) */}
             {status === "PROCESSING" && (
               <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] text-[#A5B4FC]/80 font-medium">
+                <div className="flex justify-between text-[11px] text-[#58A6FF]/80 font-medium">
                   <span>Ingesting File...</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress
                   value={progress}
-                  className="h-1.5 bg-zinc-800/80 [&>div]:bg-indigo-400 [&>div]:transition-all [&>div]:duration-300"
+                  className="h-1.5 bg-zinc-800/80 [&>div]:bg-[#58A6FF] [&>div]:transition-all [&>div]:duration-300"
                 />
               </div>
             )}
@@ -195,7 +195,7 @@ export function MaterialCard({
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => onDelete?.(id)}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-indigo-400"
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-[#58A6FF]"
                     aria-label="Delete material"
                   >
                     <Trash2 className="h-4 w-4" />

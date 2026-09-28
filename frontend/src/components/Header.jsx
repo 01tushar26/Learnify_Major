@@ -23,14 +23,14 @@ export default function Header({ uploading = false, onUploadClick, onLogout }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo & Tagline Badge */}
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-100 to-[#A5B4FC] bg-clip-text text-transparent shrink-0">
+          <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-100 to-[#58A6FF] bg-clip-text text-transparent shrink-0">
             Learnify
           </span>
 
           <div className="hidden sm:block h-4 w-px bg-zinc-800 shrink-0" />
 
-          {/* Indigo Tagline Badge */}
-          <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-[#A5B4FC] text-xs font-medium truncate">
+          {/* Blue Tagline Badge */}
+          <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#58A6FF]/20 bg-[#58A6FF]/10 text-[#58A6FF] text-xs font-medium truncate">
             
             <span className="truncate">Stop rewatching. Start asking</span>
           </div>
@@ -44,7 +44,7 @@ export default function Header({ uploading = false, onUploadClick, onLogout }) {
             onClick={onUploadClick}
             disabled={uploading}
             title="Upload New Material (PDF / Video)"
-            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[#A5B4FC] hover:bg-indigo-500/20 hover:border-indigo-400/40 active:scale-95 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-[#58A6FF]/10 border border-[#58A6FF]/20 text-[#58A6FF] hover:bg-[#58A6FF]/20 hover:border-[#58A6FF]/40 active:scale-95 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Upload new material"
           >
             {uploading ? (
@@ -61,7 +61,7 @@ export default function Header({ uploading = false, onUploadClick, onLogout }) {
                 variant="ghost"
                 size="icon"
                 aria-label="User Profile"
-                className="h-10 w-10 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white focus-visible:ring-1 focus-visible:ring-indigo-400"
+                className="h-10 w-10 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white focus-visible:ring-1 focus-visible:ring-[#58A6FF]"
               >
                 <User className="h-5 w-5" />
               </Button>
@@ -75,7 +75,7 @@ export default function Header({ uploading = false, onUploadClick, onLogout }) {
                 My Account
               </div>
               <DropdownMenuSeparator className="bg-zinc-800/80" />
-              <DropdownMenuItem className="focus:bg-indigo-500/10 focus:text-[#A5B4FC] cursor-pointer rounded-lg transition-colors">
+              <DropdownMenuItem className="focus:bg-[#58A6FF]/10 focus:text-[#58A6FF] cursor-pointer rounded-lg transition-colors">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile Settings</span>
               </DropdownMenuItem>

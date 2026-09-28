@@ -86,7 +86,7 @@ export default function LandingPage() {
           <button
             type="button"
             onClick={() => setAuthOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#58A6FF] hover:bg-[#79B8FF] active:scale-95 text-zinc-900 font-semibold text-base px-6 py-3.5 transition-all duration-200 shadow-xl shadow-[#1F6FEB]/50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#58A6FF] hover:bg-[#79B8FF] active:scale-95 text-black font-semibold text-base px-6 py-3.5 transition-all duration-200 "
           >
             Get Started Free
             <ArrowRight className="h-5 w-5" />

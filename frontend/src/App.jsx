@@ -17,10 +17,6 @@ function App() {
         <Route path="/materials" element={<MaterialsDashboard/>} />
         <Route path="/oauth-success" element={<OAuthSuccessPage />} />
         
-        {/* <Route path="/oauth-success" element={<OAuthSuccessPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/materials/:id" element={<MaterialDetailPage />} /> */}
-        
       </Routes>
       <Toaster theme="dark" richColors position="top-right" />
     </>

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Clock,
   Trash2,
+  MessageSquareText,
 } from "lucide-react";
 
 const SpotlightCard = ({
@@ -109,9 +110,10 @@ export function MaterialCard({
   status,
   createdAt,
   errorMessage,
-  progress = 45,
   onDelete,
 }) {
+  const navigate = useNavigate();
+  const isReady = status === "DONE";
   const { Icon: TypeIcon, label: typeLabel } =
     typeConfig[materialType] ?? typeConfig.PDF;
   const {
@@ -163,20 +165,6 @@ export function MaterialCard({
           </CardHeader>
 
           <CardContent className="p-0 mt-4 space-y-3">
-            {/* Progress Bar (Visible during PROCESSING) */}
-            {status === "PROCESSING" && (
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] text-[#58A6FF]/80 font-medium">
-                  <span>Ingesting File...</span>
-                  <span>{progress}%</span>
-                </div>
-                <Progress
-                  value={progress}
-                  className="h-1.5 bg-zinc-800/80 [&>div]:bg-[#58A6FF] [&>div]:transition-all [&>div]:duration-300"
-                />
-              </div>
-            )}
-
             {/* Error Banner */}
             {status === "FAILED" && errorMessage && (
               <div className="text-xs text-rose-300 bg-rose-950/30 border border-rose-800/30 rounded-lg p-2.5 flex items-start gap-2">
@@ -191,23 +179,46 @@ export function MaterialCard({
                 {formatDate(createdAt)}
               </span>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onDelete?.(id)}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-[#58A6FF]"
-                    aria-label="Delete material"
+              <div className="flex items-center gap-1">
+                {/* Open Chat & Quiz */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => isReady && navigate(`/materials/${id}`)}
+                      disabled={!isReady}
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-[#58A6FF] hover:bg-[#58A6FF]/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-[#58A6FF] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400"
+                      aria-label="Open chat and quiz"
+                    >
+                      <MessageSquareText className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="bg-zinc-900 text-zinc-200 border border-zinc-700 text-xs shadow-xl"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="top"
-                  className="bg-zinc-900 text-zinc-200 border border-zinc-700 text-xs shadow-xl"
-                >
-                  Delete Material
-                </TooltipContent>
-              </Tooltip>
+                    {isReady ? "Chat & Quiz" : "Available once processing is done"}
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Delete */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => onDelete?.(id)}
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-[#58A6FF]"
+                      aria-label="Delete material"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="bg-zinc-900 text-zinc-200 border border-zinc-700 text-xs shadow-xl"
+                  >
+                    Delete Material
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             </div>
           </CardContent>
         </Card>

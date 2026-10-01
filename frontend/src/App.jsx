@@ -7,6 +7,7 @@ import { MaterialCard } from './components/MaterialCard';
 import MaterialsDashboard from './Pages/MaterialsDashboard';
  import OAuthSuccessPage from "@/pages/OAuthSuccessPage";
 import { toast, Toaster } from "sonner";
+ import MaterialPage from "@/pages/MaterialPage";
 
 function App() {
 
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<LandingPage/>} />
         <Route path="/materials" element={<MaterialsDashboard/>} />
         <Route path="/oauth-success" element={<OAuthSuccessPage />} />
+       <Route path="/materials/:id" element={<MaterialPage />} />
         
       </Routes>
       <Toaster theme="dark" richColors position="top-right" />

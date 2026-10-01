@@ -102,6 +102,7 @@ public class QuizServiceImpl implements QuizService {
         List<Map<String, String>> parsed = parseJson(rawJson);
 
         QuizEntity quiz = new QuizEntity();
+        quiz.setMaterial(material);
         quiz = quizRepo.save(quiz);  // save first to get the ID
 
         List<QuestionEntity> questions = new ArrayList<>();

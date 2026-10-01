@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatServiceImpl implements ChatService {
-    private RagQueryClient ragQueryClient;
-    private MaterialRepository repository;
-    private ChatClient chatClient;
+    private final RagQueryClient ragQueryClient;
+    private final MaterialRepository repository;
+    private final ChatClient chatClient;
 
     @Override
     public ChatResponseDTO answer(String question, Long materialId) {

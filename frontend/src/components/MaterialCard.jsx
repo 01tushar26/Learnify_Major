@@ -17,6 +17,7 @@ import {
   Clock,
   Trash2,
   MessageSquareText,
+  ArrowRight,
 } from "lucide-react";
 
 const SpotlightCard = ({
@@ -43,7 +44,7 @@ const SpotlightCard = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative rounded-xl border border-[#58A6FF]/20 bg-zinc-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-[#58A6FF]/40 hover:shadow-xl hover:shadow-blue-900/20 ${className}`}
+      className={`relative min-w-0 w-full rounded-xl border border-[#58A6FF]/20 bg-zinc-950/80 backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-[#58A6FF]/40 hover:shadow-xl hover:shadow-blue-900/20 ${className}`}
     >
       <div
         className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
@@ -125,20 +126,20 @@ export function MaterialCard({
 
   return (
     <TooltipProvider>
-      <SpotlightCard className="w-full max-w-sm p-4">
-        {/* Ensured border-none is explicitly set on Card */}
-        <Card className="bg-transparent !border-none !ring-0 shadow-none text-zinc-100">
-          <CardHeader className="p-0 space-y-0">
-            <div className="flex items-start justify-between gap-3">
-              {/* File Icon & Info */}
-              <div className="flex items-center gap-3 min-w-0 flex-1">
+      <SpotlightCard className="w-full max-w-sm min-w-0 p-4">
+        <Card className="w-full min-w-0 overflow-hidden bg-transparent !border-none !ring-0 shadow-none text-zinc-100">
+          {/* !block overrides the grid layout of newer shadcn CardHeader */}
+          <CardHeader className="!block w-full min-w-0 p-0 space-y-0">
+            <div className="flex w-full min-w-0 items-start justify-between gap-3">
+              {/* File Icon & Info (shrinkable) */}
+              <div className="flex min-w-0 flex-1 items-center gap-3">
                 <div className="p-2.5 rounded-lg bg-[#58A6FF]/10 border border-[#58A6FF]/20 shrink-0 shadow-inner">
                   <TypeIcon className="h-5 w-5 text-[#58A6FF]" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <CardTitle className="text-sm font-medium text-zinc-100 truncate hover:text-[#58A6FF] transition-colors duration-200 cursor-default">
+                      <CardTitle className="block w-full truncate text-sm font-medium text-zinc-100 hover:text-[#58A6FF] transition-colors duration-200 cursor-default">
                         {fileName}
                       </CardTitle>
                     </TooltipTrigger>
@@ -153,59 +154,37 @@ export function MaterialCard({
                 </div>
               </div>
 
-              {/* Status Badge */}
+              {/* Status Badge: never shrinks, never wraps */}
               <Badge
                 variant="outline"
-                className={`shrink-0 gap-1.5 px-2.5 py-0.5 text-xs font-medium border backdrop-blur-sm ${badgeClass}`}
+                className={`shrink-0 whitespace-nowrap gap-1.5 px-2.5 py-0.5 text-xs font-medium border backdrop-blur-sm ${badgeClass}`}
               >
-                <StatusIcon className={`h-3.5 w-3.5 ${iconClass}`} />
+                <StatusIcon className={`h-3.5 w-3.5 shrink-0 ${iconClass}`} />
                 {statusLabel}
               </Badge>
             </div>
           </CardHeader>
 
-          <CardContent className="p-0 mt-4 space-y-3">
+          <CardContent className="p-0 mt-4 space-y-3 min-w-0">
             {/* Error Banner */}
             {status === "FAILED" && errorMessage && (
-              <div className="text-xs text-rose-300 bg-rose-950/30 border border-rose-800/30 rounded-lg p-2.5 flex items-start gap-2">
+              <div className="text-xs text-rose-300 bg-rose-950/30 border border-rose-800/30 rounded-lg p-2.5 flex items-start gap-2 min-w-0">
                 <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
-                <span className="leading-tight">{errorMessage}</span>
+                <span className="leading-tight min-w-0 break-words">
+                  {errorMessage}
+                </span>
               </div>
             )}
 
-            {/* Footer: Date & Delete Tooltip Action */}
-            <div className="flex items-center justify-between pt-3 border-t border-zinc-800/60">
-              <span className="text-[11px] text-zinc-400">
-                {formatDate(createdAt)}
-              </span>
-
-              <div className="flex items-center gap-1">
-                {/* Open Chat & Quiz */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => isReady && navigate(`/materials/${id}`)}
-                      disabled={!isReady}
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-[#58A6FF] hover:bg-[#58A6FF]/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-[#58A6FF] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400"
-                      aria-label="Open chat and quiz"
-                    >
-                      <MessageSquareText className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="top"
-                    className="bg-zinc-900 text-zinc-200 border border-zinc-700 text-xs shadow-xl"
-                  >
-                    {isReady ? "Chat & Quiz" : "Available once processing is done"}
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Delete */}
+            {/* Footer: Delete + Date (left), Chat (right) */}
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-zinc-800/60">
+              <div className="flex items-center gap-2 min-w-0">
+                {/* Delete (secondary, left side) */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => onDelete?.(id)}
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-[#58A6FF]"
+                      className="shrink-0 p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-rose-400"
                       aria-label="Delete material"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -218,7 +197,35 @@ export function MaterialCard({
                     Delete Material
                   </TooltipContent>
                 </Tooltip>
+
+                <span className="text-[11px] text-zinc-400 truncate">
+                  {formatDate(createdAt)}
+                </span>
               </div>
+
+              {/* Chat (primary action, right side) */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="shrink-0">
+                    <button
+                      onClick={() => isReady && navigate(`/materials/${id}`)}
+                      disabled={!isReady}
+                      className="group inline-flex items-center gap-1.5 rounded-lg border border-[#58A6FF]/30 bg-[#58A6FF]/10 px-2.5 py-1.5 text-xs font-medium text-[#58A6FF] hover:bg-[#58A6FF]/20 hover:border-[#58A6FF]/50 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-[#58A6FF] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#58A6FF]/10 disabled:hover:border-[#58A6FF]/30 disabled:active:scale-100"
+                      aria-label="Chat with this material"
+                    >
+                      
+                     
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-disabled:group-hover:translate-x-0" />
+                    </button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  className="bg-zinc-900 text-zinc-200 border border-zinc-700 text-xs shadow-xl"
+                >
+                  {isReady ? "Chat & Quiz" : "Available once processing is done"}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </CardContent>
         </Card>

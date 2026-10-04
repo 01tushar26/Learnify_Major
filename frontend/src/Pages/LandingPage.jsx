@@ -70,7 +70,7 @@ export default function LandingPage() {
 
         {/* Headline */}
         <h1 className="font-brighta text-4xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-white leading-[1.15] max-w-5xl mx-auto">
-          Boring tutorials ? Turn it into <br className="hidden sm:inline" />
+          Boring tutorials? Turn it into <br className="hidden sm:inline" />
           <span className="bg-gradient-to-r from-[#58A6FF] via-[#8FC4FF] to-white bg-clip-text text-transparent">
             a personalized tutor.
           </span>

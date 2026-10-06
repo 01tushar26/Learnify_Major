@@ -6,19 +6,10 @@ Learnify is a distributed learning platform that ingests lecture videos and PDFs
 
 
 <p align="center">
-  <img src="assets/home.png" alt="Client" width="1344"/>
+  <a href="assets/intro.mp4">
+    <img src="assets/intro.gif" alt="Learnify intro – click to watch with sound" width="800"/>
+  </a>
 </p>
-
-<p align="center">
-  <img src="assets/dashboard.png" alt="Client" width="1344"/>
-</p>
-
-<!-- <p align="center">
-  <img src="assets/editor.png" alt="Devhive Architecture" width="1672"/>
-</p>
-<p align="center">
-  <img src="assets/whiteboard.png" alt="Devhive Architecture" width="1672"/>
-</p> -->
 
 
 ---
@@ -27,7 +18,7 @@ Learnify is a distributed learning platform that ingests lecture videos and PDFs
 
 
 <p align="center">
-  <img src="assets/learnify architecture.png" alt="Client" width="1344"/>
+  <img src="assets/learnify architecture.png" alt="Client" width="1279"/>
 </p>
 
 

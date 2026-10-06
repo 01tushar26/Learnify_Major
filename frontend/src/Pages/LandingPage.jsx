@@ -1,66 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRight, Play, FileText, Video, Send, Loader2, CheckCircle2, MessageSquare, ListChecks, FolderPlus, User, Clock, FileVideo, Trash2, Plus, ArrowLeft } from "lucide-react";
 import AuthDialog from "@/components/AuthDialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const LINE_1 = "Boring tutorials? Turn it into";
-const PREFIX = "a personalized ";
-const WORDS = ["tutor.", "quiz maker.", "study buddy."];
-const LONGEST = WORDS.reduce((a, b) => (b.length > a.length ? b : a));
-
-// Types the fixed headline once, then endlessly types / holds / deletes the last word.
-// Respects prefers-reduced-motion by showing a static headline.
-function useRotatingHeadline({ typeSpeed = 70, deleteSpeed = 35, hold = 1800 } = {}) {
-  const reduce =
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
-  const fixedLen = LINE_1.length + PREFIX.length;
-  const [fixedCount, setFixedCount] = useState(reduce ? fixedLen : 0);
-  const [wordIdx, setWordIdx] = useState(0);
-  const [wordCount, setWordCount] = useState(reduce ? WORDS[0].length : 0);
-  const [phase, setPhase] = useState(reduce ? "static" : "intro");
-  const [revealed, setRevealed] = useState(reduce);
-
-  useEffect(() => {
-    if (phase === "static") return;
-    const word = WORDS[wordIdx];
-    let t;
-
-    if (phase === "intro") {
-      if (fixedCount < fixedLen) {
-        t = setTimeout(() => setFixedCount((c) => c + 1), fixedCount === 0 ? 400 : 55);
-      } else {
-        t = setTimeout(() => setPhase("typing"), 150);
-      }
-    } else if (phase === "typing") {
-      if (wordCount < word.length) {
-        t = setTimeout(() => setWordCount((c) => c + 1), typeSpeed);
-      } else {
-        setRevealed(true);
-        setPhase("hold");
-      }
-    } else if (phase === "hold") {
-      t = setTimeout(() => setPhase("deleting"), hold);
-    } else if (phase === "deleting") {
-      if (wordCount > 0) {
-        t = setTimeout(() => setWordCount((c) => c - 1), deleteSpeed);
-      } else {
-        t = setTimeout(() => {
-          setWordIdx((i) => (i + 1) % WORDS.length);
-          setPhase("typing");
-        }, 250);
-      }
-    }
-    return () => clearTimeout(t);
-  }, [phase, fixedCount, wordCount, wordIdx, fixedLen, typeSpeed, deleteSpeed, hold]);
-
-  const line1 = LINE_1.slice(0, fixedCount);
-  const prefix = PREFIX.slice(0, Math.max(0, fixedCount - LINE_1.length));
-  const word = WORDS[wordIdx].slice(0, wordCount);
-  const onLine2 = fixedCount > LINE_1.length || phase !== "intro";
-
-  return { line1, prefix, word, onLine2, revealed };
-}
+const LINE_2 = "a personalized";
+const WORD = "tutor.";
 
 const BADGE = "Stop rewatching. Start asking";
 const GLYPHS = "abcdefghijklmnopqrstuvwxyz";
@@ -123,17 +68,26 @@ function FlippingNavLink({ href, children, onClick, textColor = "text-zinc-300",
 
 export default function LandingPage() {
   const [authOpen, setAuthOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const { line1, prefix, word, onLine2, revealed: done } = useRotatingHeadline();
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   const badge = useScramble(BADGE);
 
-  // Everything after the headline fades in once typing finishes
-  const reveal = `transition-all duration-700 ease-out ${
-    done ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+  // Headline, description, buttons and demo fade up one after another
+  const reveal = `transition-all duration-700 ease-out motion-reduce:transition-none ${
+    mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
   }`;
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans selection:bg-[#58A6FF]/30 py-6 px-4">
+    <div
+      className="min-h-screen bg-black text-zinc-100 selection:bg-[#58A6FF]/30 py-6 px-4"
+      style={{ fontFamily: '"Poppins", ui-sans-serif, system-ui, sans-serif' }}
+    >
       <style>{`
         @keyframes learnify-caret { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } }
         .learnify-caret { animation: learnify-caret 1s steps(1) infinite; }
@@ -184,34 +138,15 @@ export default function LandingPage() {
 
         {/* Shrink-wrapped to the headline: everything below matches the heading text width */}
         <div className="mx-auto w-fit max-w-full">
-        {/* Headline: fixed text types in once, then the last word rotates.
-            The invisible full copy reserves the final size so the layout never jumps. */}
+        {/* Headline: fades up like the description below it */}
         <h1
-          aria-label={`Boring tutorials? Turn it into ${PREFIX}${WORDS.map((w) => w.replace(".", "")).join(", ")}.`}
-          className="font-brighta text-4xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-white leading-[1.15] max-w-5xl mx-auto"
+          className={`text-4xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-white leading-[1.15] max-w-5xl mx-auto ${reveal}`}
         >
-          <span aria-hidden="true" className="grid">
-            <span className="col-start-1 row-start-1 invisible">
-              <span className="block">{LINE_1}</span>
-              <span className="block">{PREFIX}{LONGEST}</span>
-            </span>
-
-            <span className="col-start-1 row-start-1">
-              <span className="block">
-                {line1}
-                {!onLine2 && <Caret />}
-              </span>
-              {/* inline-grid + left-aligned text keeps "a personalized" still while the word changes */}
-              <span className="inline-grid text-left">
-                <span className="col-start-1 row-start-1 invisible whitespace-pre">{PREFIX}{LONGEST}</span>
-                <span className="col-start-1 row-start-1 whitespace-pre">
-                  {prefix}
-                  <span className="bg-gradient-to-r from-[#58A6FF] via-[#8FC4FF] to-white bg-clip-text text-transparent">
-                    {word}
-                  </span>
-                  {onLine2 && <Caret />}
-                </span>
-              </span>
+          <span className="block">{LINE_1}</span>
+          <span className="block">
+            {LINE_2}{" "}
+            <span className="bg-gradient-to-r from-[#58A6FF] via-[#8FC4FF] to-white bg-clip-text text-transparent">
+              {WORD}
             </span>
           </span>
         </h1>
@@ -219,12 +154,13 @@ export default function LandingPage() {
         {/* Description */}
         <p
           className={`mt-6 w-0 min-w-full text-lg sm:text-xl text-zinc-400 max-w-2xl font-normal leading-relaxed mx-auto text-center ${reveal}`}
+          style={{ transitionDelay: "150ms" }}
         >
           No more pausing, rewinding, re-reading. Ask it questions, generate instant quizzes — Learnify handles the rest, grounded in exactly what you uploaded.
         </p>
 
         {/* Call to Actions */}
-        <div className={`mt-10 w-0 min-w-full flex flex-wrap items-center gap-4 justify-center ${reveal}`} style={{ transitionDelay: "150ms" }}>
+        <div className={`mt-10 w-0 min-w-full flex flex-wrap items-center gap-4 justify-center ${reveal}`} style={{ transitionDelay: "300ms" }}>
           <button
             type="button"
             onClick={() => setAuthOpen(true)}
@@ -236,6 +172,7 @@ export default function LandingPage() {
 
           <button
             type="button"
+            onClick={() => setDemoOpen(true)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/80 text-zinc-200 font-medium text-base px-6 py-3.5 transition-all duration-200"
           >
             <Play className="h-4 w-4 text-[#58A6FF] fill-[#58A6FF]" />
@@ -244,9 +181,9 @@ export default function LandingPage() {
         </div>
 
         {/* Product preview: a live-looking Learnify workspace instead of a screenshot */}
-        <div className={`mt-14 w-full max-w-5xl mx-auto text-left ${reveal}`} style={{ transitionDelay: "300ms" }}>
+        <div className={`mt-14 w-full max-w-5xl mx-auto text-left ${reveal}`} style={{ transitionDelay: "450ms" }}>
           <div className="overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-950">
-            <ChatDemo active={done} />
+            <ChatDemo active={mounted} />
           </div>
         </div>
         </div>
@@ -274,6 +211,20 @@ export default function LandingPage() {
 
       {/* --- Auth Dialog Modal --- */}
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
+
+      {/* --- Demo Video Modal --- */}
+      <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
+        <DialogContent
+          showCloseButton
+          className="sm:max-w-4xl w-[95vw] p-0 overflow-hidden !border-none !ring-0 bg-black rounded-2xl shadow-2xl [&>button]:text-zinc-300 [&>button]:hover:text-white"
+        >
+          <DialogTitle className="sr-only">Learnify demo</DialogTitle>
+          <DialogDescription className="sr-only">
+            A short intro video showing how Learnify works.
+          </DialogDescription>
+          <video src="/intro.mp4" className="w-full aspect-video" controls autoPlay playsInline />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -3,20 +3,18 @@ import { Loader2, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
 import axiosInstance from "@/lib/axios-instance";
 import { toast } from "sonner";
 
-// Adapts to a few likely backend shapes: options as strings, correct answer as index, letter or text.
+const LETTERS = ["A", "B", "C", "D"];
+
+// Backend sends { id, questions: [{ id, question, optionA..optionD }] } with no answers.
+// `correct` and `explanation` are filled in after the answer is submitted to POST /quiz/submit.
 function normalizeQuiz(raw) {
-  const list = raw?.questions ?? [];
-  return list.map((q) => {
-    const options = (q.options ?? q.choices ?? []).map((o) => (typeof o === "string" ? o : o.text ?? String(o)));
-    const c = q.correctAnswer ?? q.correctOption ?? q.answer ?? q.correctIndex;
-    let correct = -1;
-    if (typeof c === "number") correct = c;
-    else if (typeof c === "string") {
-      correct = options.findIndex((o) => o.trim() === c.trim());
-      if (correct < 0 && /^[A-Da-d]$/.test(c.trim())) correct = c.trim().toUpperCase().charCodeAt(0) - 65;
-    }
-    return { question: q.question ?? q.text, options, correct, explanation: q.explanation };
-  });
+  return (raw?.questions ?? []).map((q) => ({
+    id: q.id,
+    question: q.question,
+    options: LETTERS.map((L) => q[`option${L}`] ?? ""),
+    correct: -1,
+    explanation: null,
+  }));
 }
 
 export default function QuizPanel({ materialId }) {
@@ -24,6 +22,8 @@ export default function QuizPanel({ materialId }) {
   const [count, setCount] = useState(5);
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState(null);
+  const [quizId, setQuizId] = useState(null);
+  const [checking, setChecking] = useState(false);
   const [current, setCurrent] = useState(0);
   const [picked, setPicked] = useState(null);
   const [score, setScore] = useState(0);
@@ -37,8 +37,10 @@ export default function QuizPanel({ materialId }) {
         materialId,
         numberOfQuestions: count,
       });
-      const qs = normalizeQuiz(res.data?.data ?? res.data);
+      const payload = res.data?.data ?? res.data;
+      const qs = normalizeQuiz(payload).filter((q) => q.id != null && q.question && q.options.every(Boolean));
       if (!qs.length) throw new Error("No questions were returned.");
+      setQuizId(payload.id);
       setQuestions(qs);
       setCurrent(0); setPicked(null); setScore(0); setFinished(false);
     } catch (e) {
@@ -48,10 +50,34 @@ export default function QuizPanel({ materialId }) {
     }
   };
 
-  const choose = (i) => {
-    if (picked !== null) return;
+  // Sends the picked option to the backend, which replies with the correct answer and explanation.
+  const choose = async (i) => {
+    if (picked !== null || checking) return;
+    const q = questions[current];
     setPicked(i);
-    if (i === questions[current].correct) setScore((s) => s + 1);
+    setChecking(true);
+    try {
+      const res = await axiosInstance.post("/quiz/submit", {
+        quizId,
+        answers: { [q.id]: LETTERS[i] },
+      });
+      const r = res.data?.data ?? res.data;
+      const letter = String(r.correctAnswers?.[q.id] ?? "").trim().toUpperCase();
+      const correct = LETTERS.indexOf(letter);
+      setQuestions((qs) =>
+        qs.map((x, idx) =>
+          idx === current ? { ...x, correct, explanation: r.explanations?.[q.id] ?? null } : x
+        )
+      );
+      if (correct === i) setScore((s) => s + 1);
+    } catch (e) {
+      setPicked(null); // let the user try again
+      toast.error("Couldn't check your answer", {
+        description: e?.response?.data?.error?.message ?? e?.response?.data?.message ?? e.message,
+      });
+    } finally {
+      setChecking(false);
+    }
   };
 
   const next = () => {
@@ -125,9 +151,11 @@ export default function QuizPanel({ materialId }) {
                 const answered = picked !== null;
                 const isCorrect = i === q.correct;
                 const isPicked = i === picked;
+                const revealed = answered && !checking; // backend has replied
                 let style = "border-zinc-800 bg-zinc-900/60 hover:border-[#58A6FF]/40 hover:bg-zinc-900";
-                if (answered && isCorrect) style = "border-emerald-700/60 bg-emerald-950/40 text-emerald-200";
-                else if (answered && isPicked) style = "border-rose-800/60 bg-rose-950/40 text-rose-200";
+                if (revealed && isCorrect) style = "border-emerald-700/60 bg-emerald-950/40 text-emerald-200";
+                else if (revealed && isPicked) style = "border-rose-800/60 bg-rose-950/40 text-rose-200";
+                else if (checking && isPicked) style = "border-[#58A6FF]/40 bg-zinc-900 text-zinc-100";
                 else if (answered) style = "border-zinc-800/60 bg-zinc-900/30 text-zinc-500";
                 return (
                   <button
@@ -137,14 +165,15 @@ export default function QuizPanel({ materialId }) {
                     className={`w-full flex items-center justify-between gap-3 text-left rounded-xl border px-4 py-3 text-sm transition-colors ${style}`}
                   >
                     <span>{opt}</span>
-                    {answered && isCorrect && <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />}
-                    {answered && isPicked && !isCorrect && <XCircle className="h-4 w-4 shrink-0 text-rose-400" />}
+                    {checking && isPicked && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[#58A6FF]" />}
+                    {revealed && isCorrect && <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />}
+                    {revealed && isPicked && !isCorrect && <XCircle className="h-4 w-4 shrink-0 text-rose-400" />}
                   </button>
                 );
               })}
             </div>
 
-            {picked !== null && (
+            {picked !== null && !checking && (
               <div className="mt-5">
                 {questions[current].explanation && (
                   <p className="text-sm text-zinc-400 leading-relaxed rounded-xl bg-zinc-900/60 border border-zinc-800/80 p-3.5">

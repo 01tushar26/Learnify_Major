@@ -16,7 +16,6 @@ import {
   AlertCircle,
   Clock,
   Trash2,
-  MessageSquareText,
   ArrowRight,
 } from "lucide-react";
 
@@ -115,6 +114,7 @@ export function MaterialCard({
 }) {
   const navigate = useNavigate();
   const isReady = status === "DONE";
+  const canDelete = status === "DONE" || status === "FAILED";
   const { Icon: TypeIcon, label: typeLabel } =
     typeConfig[materialType] ?? typeConfig.PDF;
   const {
@@ -180,23 +180,28 @@ export function MaterialCard({
             <div className="flex items-center justify-between gap-3 pt-3 border-t border-zinc-800/60">
               <div className="flex items-center gap-2 min-w-0">
                 {/* Delete (secondary, left side) */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onDelete?.(id)}
-                      className="shrink-0 p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-rose-400"
-                      aria-label="Delete material"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="top"
-                    className="bg-zinc-900 text-zinc-200 border border-zinc-700 text-xs shadow-xl"
-                  >
-                    Delete Material
-                  </TooltipContent>
-                </Tooltip>
+                {/* Delete (secondary, left side) */}
+<Tooltip>
+  <TooltipTrigger asChild>
+    {/* span wrapper so the tooltip still works while the button is disabled */}
+    <span className="shrink-0">
+      <button
+        onClick={() => canDelete && onDelete?.(id)}
+        disabled={!canDelete}
+        className="p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-rose-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-zinc-500 disabled:hover:bg-transparent disabled:active:scale-100"
+        aria-label="Delete material"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </span>
+  </TooltipTrigger>
+  <TooltipContent
+    side="top"
+    className="bg-zinc-900 text-zinc-200 border border-zinc-700 text-xs shadow-xl"
+  >
+    {canDelete ? "Delete Material" : "Available once processing is done"}
+  </TooltipContent>
+</Tooltip>
 
                 <span className="text-[11px] text-zinc-400 truncate">
                   {formatDate(createdAt)}

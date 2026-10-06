@@ -13,5 +13,6 @@ public class QuizResultDTO {
     private Long quizId;
     private int totalQuestions;
     private int correctCount;
-    private Map<Long, String> correctAnswers;
+    private Map<Long, String> correctAnswers;   // questionId -> "A".."D" (only for answered questions)
+    private Map<Long, String> explanations;     // questionId -> explanation (only for answered questions)
 }

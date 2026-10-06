@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import learnifyApi_service.Client.RagQueryClient;
 import learnifyApi_service.DTOs.QuestionDTO;
 import learnifyApi_service.DTOs.QuizResponseDTO;
+import learnifyApi_service.DTOs.QuizResultDTO;
+import learnifyApi_service.DTOs.QuizSubmissionDTO;
 import learnifyApi_service.DTOs.RagSearchResultDTO;
 import learnifyApi_service.Entities.Enums.IngestStatus;
 import learnifyApi_service.Entities.Material;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,8 +46,8 @@ public class QuizServiceImpl implements QuizService {
     @Transactional
     public QuizResponseDTO generateQuiz(String topic, Long materialId, int numberOfQuestions) {
         User currentUser = Util.getAuthenticatedUser();
-        Material material = materialRepository.findById(materialId).orElseThrow(()->new ResourceNotFoundException("Material Not found"));
-        if(!material.getUser().getId().equals(currentUser.getId())){
+        Material material = materialRepository.findById(materialId).orElseThrow(() -> new ResourceNotFoundException("Material Not found"));
+        if (!material.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("This material doesn't belong to you");
         }
 
@@ -52,12 +55,17 @@ public class QuizServiceImpl implements QuizService {
             throw new ResourceNotFoundException("Material is not ready yet, current status: " + material.getStatus());
         }
 
-        String expandedQuery = topic + " key concepts, definitions, important facts, core ideas";
+        // The frontend sends topic = null when the field is left empty
+        boolean hasTopic = topic != null && !topic.isBlank();
+        String topicLabel = hasTopic ? topic.trim() : "the material as a whole";
+        String expandedQuery = hasTopic
+                ? topic.trim() + " key concepts, definitions, important facts, core ideas"
+                : "key concepts, definitions, important facts, core ideas";
 
         List<RagSearchResultDTO> results = client.search(expandedQuery, materialId, 8);
 
         if (results.isEmpty()) {
-            throw new ResourceNotFoundException("No relevant context found for the topic " + topic);
+            throw new ResourceNotFoundException("No relevant context found for the topic " + topicLabel);
         }
         String context = results.stream()
                 .map(RagSearchResultDTO::getText)
@@ -65,16 +73,16 @@ public class QuizServiceImpl implements QuizService {
 
         String prompt = String.format("""
                 Based on the provided context below, generate exactly %d multiple choice questions on the topic "%s".
-
+                
                 Context:
                 %s
-
+                
                 Rules:
                 - Each question must be based strictly on the document content
                 - Each question must have exactly 4 options labeled A, B, C, D
                 - Only one option must be correct
                 - Include a brief explanation for why the correct answer is right
-
+                
                 Return ONLY a valid JSON array. No extra text, no markdown, no code blocks.
                 Use exactly this structure:
                 [
@@ -88,7 +96,7 @@ public class QuizServiceImpl implements QuizService {
                     "explanation": "Brief explanation here"
                   }
                 ]
-                """, numberOfQuestions, topic, context);
+                """, numberOfQuestions, topicLabel, context);
 
         String rawJson = chatClient
                 .prompt()
@@ -166,13 +174,51 @@ public class QuizServiceImpl implements QuizService {
 
             return objectMapper.readValue(
                     cleaned,
-                    new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, String>>>() {}
+                    new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, String>>>() {
+                    }
             );
 
         } catch (Exception e) {
             log.error("Failed to parse LLM JSON response: {}", rawJson);
             throw new RuntimeException("Failed to parse quiz JSON from LLM", e);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public QuizResultDTO submitQuiz(QuizSubmissionDTO submission) {
+        User user = Util.getAuthenticatedUser();
+
+        QuizEntity quiz = quizRepo.findById(submission.getQuizId())
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with id " + submission.getQuizId()));
+
+        if (!quiz.getMaterial().getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("This quiz doesn't belong to you");
+        }
+
+        Map<Long, String> answers = submission.getAnswers() == null ? Map.of() : submission.getAnswers();
+        Map<Long, String> correctAnswers = new LinkedHashMap<>();
+        Map<Long, String> explanations = new LinkedHashMap<>();
+        int correctCount = 0;
+
+        for (QuestionEntity q : quiz.getQuestionList()) {
+            String given = answers.get(q.getId());
+            if (given == null) continue; // answers are only revealed for questions the user actually answered
+
+            correctAnswers.put(q.getId(), q.getCorrectAnswer());
+            explanations.put(q.getId(), q.getExplanation());
+            if (q.getCorrectAnswer().equalsIgnoreCase(given.trim())) {
+                correctCount++;
+            }
+        }
+
+        return new QuizResultDTO(
+                quiz.getId(),
+                quiz.getQuestionList().size(),
+                correctCount,
+                correctAnswers,
+                explanations
+        );
     }
 
     @Override

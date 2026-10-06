@@ -2,6 +2,8 @@ package learnifyApi_service.Controllers;
 
 import learnifyApi_service.DTOs.QuizRequestDTO;
 import learnifyApi_service.DTOs.QuizResponseDTO;
+import learnifyApi_service.DTOs.QuizResultDTO;
+import learnifyApi_service.DTOs.QuizSubmissionDTO;
 import learnifyApi_service.Service.QuizService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,5 +23,10 @@ public class QuizController {
     @GetMapping("/{id}")
     public ResponseEntity<QuizResponseDTO> getQuiz(@PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuiz(id));
+    }
+
+    @PostMapping("/submit")
+    public ResponseEntity<QuizResultDTO> submitQuiz(@RequestBody QuizSubmissionDTO dto) {
+        return ResponseEntity.ok(quizService.submitQuiz(dto));
     }
 }

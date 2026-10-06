@@ -18,7 +18,7 @@ Learnify is a distributed learning platform that ingests lecture videos and PDFs
 
 
 <p align="center">
-  <img src="assets/learnify architecture.png" alt="Client" width="1279"/>
+  <img src="assets/learnify architecture.png" alt="Client" width="1313"/>
 </p>
 
 

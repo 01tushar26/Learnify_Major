@@ -2,6 +2,20 @@ version: "3.9"
 
 services:
 
+  frontend:
+    image: learnify-client:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_CLIENT_URL=http://localhost:5173
+        - VITE_BACKEND_URL=http://localhost:8080/api/v1
+    container_name: learnify-client
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+  
+
   postgres:
     image: pgvector/pgvector:pg16
     container_name: ragdb

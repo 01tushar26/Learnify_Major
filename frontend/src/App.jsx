@@ -2,12 +2,11 @@
 import { Route, Routes } from 'react-router-dom'
 import './App.css'
 
-import LandingPage from "@/pages/LandingPage";
-import { MaterialCard } from './components/MaterialCard';
+import LandingPage from "./Pages/LandingPage";
 import MaterialsDashboard from './Pages/MaterialsDashboard';
- import OAuthSuccessPage from "@/pages/OAuthSuccessPage";
-import { toast, Toaster } from "sonner";
- import MaterialPage from "@/pages/MaterialPage";
+ import OAuthSuccessPage from "./Pages/OAuthSuccessPage";
+import { Toaster } from "sonner";
+ import MaterialPage from "./Pages/MaterialPage";
 
 function App() {
 

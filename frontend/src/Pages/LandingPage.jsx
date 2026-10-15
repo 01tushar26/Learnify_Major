@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRight, Play, FileText, Video, Send, Loader2, CheckCircle2, MessageSquare, ListChecks, FolderPlus, User, Clock, FileVideo, Trash2, Plus, ArrowLeft } from "lucide-react";
 import AuthDialog from "@/components/AuthDialog";
+import Footer from "@/components/Footer";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const LINE_1 = "Boring tutorials? Turn it into";
@@ -201,13 +202,8 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* --- Footer / Showcase Strip --- */}
-      <footer className="relative z-10 border-t border-zinc-800/60 bg-zinc-950/40 py-4 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-zinc-500 uppercase tracking-widest">
-          <span>SHOWCASE / DEMO</span>
-          <span>2026</span>
-        </div>
-      </footer>
+      {/* --- Footer --- */}
+      <Footer />
 
       {/* --- Auth Dialog Modal --- */}
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />

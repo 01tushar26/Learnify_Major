@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 
 // External sites use `href` and open in a new tab. Internal pages would use `to` (react-router).
 const LINKS = [
-  { label: "Github", href: "https://github.com/your-username" },
-  { label: "Twitter", href: "https://twitter.com/your-handle" },
-  { label: "LinkedIn", href: "https://www.linkedin.com/in/your-profile" },
+  { label: "Github", href: "https://github.com/01tushar26" },
+  { label: "Twitter", href: "https://x.com/tushartyagi2601" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/tushartyagi2601/" },
 ];
 
 const LINK_CLASS =

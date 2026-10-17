@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import rag_worker.DTO.RagSearchRequestDTO;
 import rag_worker.DTO.RagSearchResultDTO;
+import rag_worker.Service.RAGIndexingService;
+import rag_worker.Service.RagSearchService;
 
 import java.util.List;
 
@@ -19,22 +21,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SemanticSearchController {
     private final VectorStore vectorStore;
+    private final RagSearchService ragSearchService;
 
     @PostMapping
     public ResponseEntity<List<RagSearchResultDTO>> semanticSearch(@RequestBody RagSearchRequestDTO dto) {
-
-        SearchRequest searchRequest = SearchRequest.builder()
-                .query(dto.getQuery())
-                .topK(dto.getTopK())
-                .filterExpression("materialId == '" + dto.getMaterialId() + "'")
-                .build();
-
-        List<Document> docs = vectorStore.similaritySearch(searchRequest);
-
-        List<RagSearchResultDTO> results = docs.stream()
-                .map(d -> new RagSearchResultDTO(d.getText(), d.getScore()))
-                .toList();
-
-        return ResponseEntity.ok(results);
+        return ResponseEntity.ok(ragSearchService.search(dto));
     }
 }

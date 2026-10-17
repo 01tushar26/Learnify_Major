@@ -106,7 +106,7 @@ export default function QuizPanel({ materialId }) {
 
             <label className="block text-xs text-zinc-400 mt-5 mb-1.5">Number of questions</label>
             <div className="flex gap-2">
-              {[5, 10, 15].map((n) => (
+              {[5, 7, 10].map((n) => (
                 <button
                   key={n}
                   onClick={() => setCount(n)}

@@ -91,3 +91,53 @@ services:
       - "8000:8000"
     depends_on:
       - rabbitmq
+
+  ollama:
+    image: alpine/ollama:latest
+    container_name: learnify-ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_KEEP_ALIVE: "-1"        # never unload the model after idle (avoids slow cold loads)
+      OLLAMA_CONTEXT_LENGTH: "2048"  # nomic-embed-text's trained context; silences the num_ctx warning
+    expose:
+      - "11434"   # reachable only from other containers on the compose network
+    volumes:
+      - ollama_data:/root/.ollama   # models persist across restarts
+    healthcheck:
+      test: [ "CMD", "ollama", "list" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    # Optional: uncomment for NVIDIA GPU (nomic-embed-text runs fine on CPU too)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+    # One-shot job: pulls the model into the ollama volume, then exits
+  ollama-pull:
+    image: alpine/ollama:latest
+    container_name: learnify-ollama-pull
+    restart: "no"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    # Pull the model, then send one embed request so it is already loaded in memory
+    # when rag-worker starts (a cold load on a small CPU can exceed the client's 10s timeout)
+    entrypoint:
+      - sh
+      - -c
+      - >
+        ollama pull nomic-embed-text &&
+        wget -q -O /dev/null
+        --header='Content-Type: application/json'
+        --post-data='{"model":"nomic-embed-text","input":"warmup","keep_alive":-1}'
+        http://ollama:11434/api/embed
+volumes:
+  ollama_data:

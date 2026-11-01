@@ -14,4 +14,13 @@ public final class Util {
         }
         return (User) auth.getPrincipal();
     }
-}
+
+        public static String extractJson(String raw) {
+            if (raw == null || raw.isBlank()) throw new IllegalStateException("Empty LLM response");
+            String s = raw.trim().replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").trim();
+            int start = s.indexOf('{'), end = s.lastIndexOf('}');
+            if (start == -1 || end == -1) throw new IllegalStateException("No JSON object found");
+            return s.substring(start, end + 1);
+        }
+    }
+

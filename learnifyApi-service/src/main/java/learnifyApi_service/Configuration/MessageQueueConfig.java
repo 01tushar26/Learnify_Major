@@ -27,6 +27,11 @@ public class MessageQueueConfig {
     public static final String MATERIAL_DELETED_EXCHANGE = "material.deleted.exchange";
     public static final String MATERIAL_DELETED_ROUTING_KEY = "material.deleted";
 
+    public static final String STUDY_QUEUE    = "study.pack.queue";
+    public static final String STUDY_EXCHANGE = "study.pack.exchange";
+    public static final String STUDY_KEY      = "study.pack";
+
+
 
 
 
@@ -66,6 +71,17 @@ public class MessageQueueConfig {
     @Bean
     public Binding statusBinding() {
         return BindingBuilder.bind(statusQueue()).to(statusExchange()).with(STATUS_ROUTING_KEY);
+    }
+
+    @Bean
+    public DirectExchange studyExchange() { return new DirectExchange(STUDY_EXCHANGE); }
+
+    @Bean
+    public Queue studyQueue() { return QueueBuilder.durable(STUDY_QUEUE).build(); }
+
+    @Bean
+    public Binding studyBinding() {
+        return BindingBuilder.bind(studyQueue()).to(studyExchange()).with(STUDY_KEY);
     }
 
     @Bean

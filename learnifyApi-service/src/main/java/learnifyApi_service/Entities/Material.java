@@ -55,6 +55,11 @@ public class Material {
     @JsonIgnore
     private List<QuizEntity> quizzes = new ArrayList<>();
 
+    //parent or inverse side
+    @OneToOne(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private StudyPackEntity studyPackEntity;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore

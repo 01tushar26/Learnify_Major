@@ -1,13 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MessageSquare, ListChecks, FileText, FileVideo, Loader2, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  MessageSquare,
+  ListChecks,
+  BookOpen,
+  Layers,
+  FileText,
+  FileVideo,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 import axiosInstance from "@/lib/axios-instance";
 import ChatPanel from "@/components/ChatPanel";
 import QuizPanel from "@/components/QuizPanel";
+import NotesPanel from "@/components/NotesPanel";
+import FlashcardsPanel from "@/components/FlashcardsPanel";
+import useStudyPack from "@/hooks/useStudyPack";
 
 const TABS = [
   { key: "chat", label: "Chat", hint: "Ask questions", Icon: MessageSquare },
   { key: "quiz", label: "Quiz", hint: "Test yourself", Icon: ListChecks },
+  { key: "notes", label: "Notes", hint: "Read the summary", Icon: BookOpen },
+  { key: "flashcards", label: "Flashcards", hint: "Review key terms", Icon: Layers },
 ];
 
 export default function MaterialPage() {
@@ -41,6 +56,8 @@ export default function MaterialPage() {
   }, [id, navigate]);
 
   const ready = material?.status === "DONE";
+  // One shared study-pack state for the Notes and Flashcards tabs
+  const study = useStudyPack(id, ready);
   const TypeIcon = material?.materialType === "VIDEO" ? FileVideo : FileText;
 
   return (
@@ -64,7 +81,7 @@ export default function MaterialPage() {
           </div>
         </div>
 
-        <nav className="flex md:flex-col gap-1 p-2 md:p-3 items-center md:items-stretch">
+        <nav className="flex md:flex-col gap-1 p-2 md:p-3 items-center md:items-stretch overflow-x-auto">
           {TABS.map(({ key, label, hint, Icon }) => {
             const active = tab === key;
             return (
@@ -91,7 +108,9 @@ export default function MaterialPage() {
       {/* --- Content --- */}
       <main className="flex-1 min-w-0 min-h-0 relative">
         {!material ? (
-          <Centered><Loader2 className="h-6 w-6 animate-spin text-[#58A6FF]" /></Centered>
+          <Centered>
+            <Loader2 className="h-6 w-6 animate-spin text-[#58A6FF]" />
+          </Centered>
         ) : !ready ? (
           <Centered>
             {material.status === "FAILED" ? (
@@ -99,7 +118,8 @@ export default function MaterialPage() {
                 <AlertCircle className="h-8 w-8 text-rose-400 mb-3" />
                 <h3 className="font-semibold">Processing failed</h3>
                 <p className="text-sm text-zinc-400 mt-1 max-w-sm">
-                  {material.errorMessage || "This material couldn't be processed. Delete it and upload it again."}
+                  {material.errorMessage ||
+                    "This material couldn't be processed. Delete it and upload it again."}
                 </p>
               </>
             ) : (
@@ -107,16 +127,31 @@ export default function MaterialPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-[#58A6FF] mb-3" />
                 <h3 className="font-semibold">Still processing</h3>
                 <p className="text-sm text-zinc-400 mt-1 max-w-sm">
-                  Chat and quiz unlock once indexing finishes. This page updates automatically.
+                  Chat, quiz, notes and flashcards unlock once indexing finishes. This page updates automatically.
                 </p>
               </>
             )}
           </Centered>
         ) : (
           <>
-            {/* Both stay mounted so chat history / quiz progress survive tab switches */}
-            <div className={tab === "chat" ? "h-full" : "hidden"}><ChatPanel materialId={Number(id)} /></div>
-            <div className={tab === "quiz" ? "h-full" : "hidden"}><QuizPanel materialId={Number(id)} /></div>
+            {/* All stay mounted so chat history / quiz progress survive tab switches */}
+            <div className={tab === "chat" ? "h-full" : "hidden"}>
+              <ChatPanel materialId={Number(id)} />
+            </div>
+            <div className={tab === "quiz" ? "h-full" : "hidden"}>
+              <QuizPanel materialId={Number(id)} />
+            </div>
+            <div className={tab === "notes" ? "h-full" : "hidden"}>
+              <NotesPanel study={study} materialId={Number(id)} active={tab === "notes"} />
+            </div>
+            <div className={tab === "flashcards" ? "h-full" : "hidden"}>
+              <FlashcardsPanel
+  study={study}
+  materialId={Number(id)}
+  active={tab === "flashcards"}
+  title={material?.fileName}
+/>
+            </div>
           </>
         )}
       </main>
@@ -125,5 +160,9 @@ export default function MaterialPage() {
 }
 
 function Centered({ children }) {
-  return <div className="h-full flex flex-col items-center justify-center text-center p-8">{children}</div>;
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center p-8">
+      {children}
+    </div>
+  );
 }

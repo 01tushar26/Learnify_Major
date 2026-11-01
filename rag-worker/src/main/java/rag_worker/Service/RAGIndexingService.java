@@ -7,8 +7,11 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
+import rag_worker.Entity.MaterialTextEntity;
+import rag_worker.Repositories.MaterialTextEntityRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,15 +19,21 @@ import java.util.List;
 public class RAGIndexingService {
     //Do indexing- 3.CHUNKING AND 4.STORING
     private final VectorStore vectorStore;
+    private final MaterialTextEntityRepository materialTextEntityRepository;
 
     public void chunkAndStore(List<Document> documents, String fileName , Long materialId){
+
+        //this will store the transcript to a db which is used for the notes and flashcards
+        saveFullText(materialId, documents.stream()
+                .map(Document::getText)
+                .collect(Collectors.joining("\n\n")));
 
         //chunking
         TokenTextSplitter splitter = TokenTextSplitter.builder()
                 .withChunkSize(800)
                 .withMinChunkSizeChars(50)
                 .withMinChunkLengthToEmbed(200)
-                .withMaxNumChunks(20)
+                .withMaxNumChunks(500)
                 .withKeepSeparator(true)
                 .build();
 
@@ -66,6 +75,10 @@ public class RAGIndexingService {
 
     public String clean(String text) {
         return cleanText(text);
+    }
+
+    public void saveFullText(Long materialId, String text) {
+        materialTextEntityRepository.save(new MaterialTextEntity(materialId, text, null));
     }
 
 }

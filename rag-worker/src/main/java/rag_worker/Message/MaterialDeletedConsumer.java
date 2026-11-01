@@ -6,6 +6,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.stereotype.Component;
+import rag_worker.Repositories.MaterialTextEntityRepository;
 
 import static rag_worker.Configuration.MessageBrokerConfig.MATERIAL_DELETED_QUEUE;
 
@@ -15,6 +16,7 @@ import static rag_worker.Configuration.MessageBrokerConfig.MATERIAL_DELETED_QUEU
 public class MaterialDeletedConsumer {
 
     private final JdbcTemplate jdbcTemplate;
+    private final MaterialTextEntityRepository materialTextEntityRepository;
 
     @RabbitListener(queues = MATERIAL_DELETED_QUEUE)
     public void consume(MaterialDeletedMessage message) {
@@ -23,5 +25,6 @@ public class MaterialDeletedConsumer {
                 message.getMaterialId().toString()
         );
         log.info("Deleted {} vector chunks for materialId={}", deleted, message.getMaterialId());
+        materialTextEntityRepository.deleteById(message.getMaterialId());
     }
 }

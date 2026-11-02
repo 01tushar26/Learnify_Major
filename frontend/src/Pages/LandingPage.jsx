@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Play, FileText, Video, Send, Loader2, CheckCircle2, MessageSquare, ListChecks, FolderPlus, User, Clock, FileVideo, Trash2, Plus, ArrowLeft } from "lucide-react";
+import { ArrowRight, Play, FileText, Video, Send, Loader2, CheckCircle2, MessageSquare, ListChecks, BookOpen, Layers, FolderPlus, User, Clock, FileVideo, Trash2, Plus, ArrowLeft } from "lucide-react";
 import AuthDialog from "@/components/AuthDialog";
 import Footer from "@/components/Footer";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -157,7 +157,7 @@ export default function LandingPage() {
           className={`mt-6 w-0 min-w-full text-lg sm:text-xl text-zinc-400 max-w-2xl font-normal leading-relaxed mx-auto text-center ${reveal}`}
           style={{ transitionDelay: "150ms" }}
         >
-          No more pausing, rewinding, re-reading. Ask it questions, generate instant quizzes — Learnify handles the rest, grounded in exactly what you uploaded.
+          No more pausing, rewinding, re-reading. Ask it questions, generate instant quizzes, notes and flashcards. Learnify handles the rest, grounded in exactly what you uploaded.
         </p>
 
         {/* Call to Actions */}
@@ -199,6 +199,10 @@ export default function LandingPage() {
             <Video className="h-4 w-4 text-[#58A6FF]" />
             <span>Video Transcriptions</span>
           </div>
+          <div className="flex items-center gap-2">
+  <Layers className="h-4 w-4 text-[#58A6FF]" />
+  <span>Notes & Flashcards</span>
+</div>
         </div>
       </main>
 
@@ -233,8 +237,8 @@ function Caret() {
 }
 
 // Dashboard scene (upload -> processing -> done -> open) runs first, then the workspace scene.
-const PHASES = ["empty", "upload1", "proc1", "upload2", "done1", "open", "idle", "typing", "thinking", "answer", "hold", "quiz", "picked"];
-const DASH = PHASES.slice(0, PHASES.indexOf("idle"));
+const PHASES = ["empty", "upload1", "proc1", "upload2", "done1", "open", "idle", "typing", "thinking", "answer", "hold", "quiz", "picked", "notes", "flashcard", "flipped"];
+const DASH = PHASES.slice(0, PHASES.indexOf("idle"))
 
 const QUESTION = "Summarize this material";
 const ANSWER =
@@ -246,9 +250,23 @@ const QUIZ = {
   correct: 0,
   explanation: "A larger rate takes bigger steps and can overshoot the minimum. A smaller one is stable but slow.",
 };
+const NOTES = {
+  title: "Gradient Descent",
+  summary: "How a model learns by repeatedly stepping against the gradient of its loss.",
+  sections: [
+    { heading: "Loss function", points: ["Measures how wrong a prediction is", "Training tries to minimize it"] },
+    { heading: "Learning rate", points: ["Sets the size of each update", "Too high overshoots, too low crawls"] },
+  ],
+};
+const FLASH = {
+  front: "What does the learning rate control?",
+  back: "The size of each weight update.",
+};
 const DEMO_TABS = [
   { key: "chat", label: "Chat", hint: "Ask questions", Icon: MessageSquare },
   { key: "quiz", label: "Quiz", hint: "Test yourself", Icon: ListChecks },
+  { key: "notes", label: "Notes", hint: "Read the summary", Icon: BookOpen },
+  { key: "flashcards", label: "Flashcards", hint: "Review key terms", Icon: Layers },
 ];
 
 // Looping preview that reuses the real ChatPanel / QuizPanel / MaterialPage styling:
@@ -292,18 +310,28 @@ function ChatDemo({ active }) {
       t = setTimeout(() => setPhase("quiz"), 3200);
     } else if (phase === "quiz") {
       t = setTimeout(() => setPhase("picked"), 1800);
-    } else if (phase === "picked") {
-      t = setTimeout(() => {
-        setQCount(0);
-        setAWords(0);
-        setPhase("empty");
-      }, 4000);
-    }
+    }  else if (phase === "picked") {
+  t = setTimeout(() => setPhase("notes"), 3000);
+} else if (phase === "notes") {
+  t = setTimeout(() => setPhase("flashcard"), 3600);
+} else if (phase === "flashcard") {
+  t = setTimeout(() => setPhase("flipped"), 1800);
+} else if (phase === "flipped") {
+  t = setTimeout(() => {
+    setQCount(0);
+    setAWords(0);
+    setPhase("empty");
+  }, 3500);
+}
     return () => clearTimeout(t);
   }, [phase, active, qCount, aWords, words.length]);
 
   const onDash = DASH.includes(phase);
-  const tab = phase === "quiz" || phase === "picked" ? "quiz" : "chat";
+  const tab =
+  phase === "quiz" || phase === "picked" ? "quiz"
+  : phase === "notes" ? "notes"
+  : phase === "flashcard" || phase === "flipped" ? "flashcards"
+  : "chat";
   const sent = ["thinking", "answer", "hold", "static"].includes(phase);
   const inputText = phase === "typing" ? QUESTION.slice(0, qCount) : "";
   const picked = phase === "picked";
@@ -311,8 +339,7 @@ function ChatDemo({ active }) {
   return (
     <div
       role="img"
-      aria-label="Demo: a student asks Learnify to summarize an uploaded lecture, gets an answer grounded in it, then answers a generated quiz question."
-    >
+      aria-label="Demo: a student asks Learnify to summarize an uploaded lecture, answers a generated quiz question, then reads the notes and flips a flashcard.">
       <div aria-hidden="true" className="flex h-[28rem] sm:h-[26rem] flex-col bg-zinc-950">
         {onDash ? (
           <DashboardScene phase={phase} />
@@ -425,6 +452,48 @@ function ChatDemo({ active }) {
                 >
                   <Send className="h-4 w-4" />
                 </div>
+              </div>
+            </div>
+          </div>
+         ) : tab === "notes" ? (
+          /* Notes view, styled like NotesPanel */
+          <div className="learnify-fade min-h-0 flex-1 overflow-hidden px-5 py-5">
+            <div className="mx-auto w-full max-w-xl">
+              <h3 className="text-lg font-semibold text-white">{NOTES.title}</h3>
+              <p className="mt-2 rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-3 text-xs leading-relaxed text-zinc-400">
+                {NOTES.summary}
+              </p>
+              <div className="mt-4 space-y-4">
+                {NOTES.sections.map((s) => (
+                  <section key={s.heading}>
+                    <h4 className="text-sm font-medium text-[#58A6FF]">{s.heading}</h4>
+                    <ul className="mt-1.5 space-y-1.5">
+                      {s.points.map((p) => (
+                        <li key={p} className="flex gap-2.5 text-xs leading-relaxed text-zinc-300">
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : tab === "flashcards" ? (
+          /* Flashcard view, styled like FlashcardsPanel */
+          <div className="learnify-fade min-h-0 flex-1 overflow-hidden px-5 py-5">
+            <div className="mx-auto w-full max-w-xs">
+              <div className="mb-3 flex items-center justify-between text-xs text-zinc-400">
+                <span>Card 1 of 12</span>
+              </div>
+              <div className="mb-4 h-1 overflow-hidden rounded-full bg-zinc-800">
+                <div className="h-full w-[8%] bg-[#58A6FF]" />
+              </div>
+              <DemoFlashcard flipped={phase === "flipped"} />
+              <div className="mt-4 flex justify-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-rose-800/60 bg-rose-950/30 text-rose-400">✕</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-emerald-800/60 bg-emerald-950/30 text-emerald-400">✓</span>
               </div>
             </div>
           </div>
@@ -581,6 +650,45 @@ function DashboardScene({ phase }) {
             {card2 && <DemoCard name="Lecture 3 - Backprop.mp4" type="VIDEO" status={card2} />}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+// Mirrors the real flashcard: MaterialCard-style face that flips in 3D
+function DemoFlashcard({ flipped }) {
+  const face = (label, text, back) => (
+    <div
+      className="absolute inset-0 flex flex-col rounded-xl border border-[#58A6FF]/20 bg-zinc-950 p-4"
+      style={{ backfaceVisibility: "hidden", transform: back ? "rotateY(180deg)" : "none" }}
+    >
+      <div className="flex items-center gap-2.5">
+        <div className="rounded-lg border border-[#58A6FF]/20 bg-[#58A6FF]/10 p-2">
+          <Layers className="h-4 w-4 text-[#58A6FF]" />
+        </div>
+        <div>
+          <p className="text-xs font-medium text-zinc-100">{label}</p>
+          <p className="text-[10px] text-zinc-400">Flashcard</p>
+        </div>
+      </div>
+      <div className="flex flex-1 items-center justify-center text-center">
+        <p className={`text-sm leading-relaxed ${back ? "text-zinc-100" : "font-medium text-white"}`}>{text}</p>
+      </div>
+      <div className="border-t border-zinc-800/60 pt-2 text-[10px] text-zinc-500">Tap to flip</div>
+    </div>
+  );
+
+  return (
+    <div style={{ perspective: 1000 }}>
+      <div
+        className="relative h-44"
+        style={{
+          transformStyle: "preserve-3d",
+          transition: "transform 600ms",
+          transform: flipped ? "rotateY(180deg)" : "none",
+        }}
+      >
+        {face("Question", FLASH.front, false)}
+        {face("Answer", FLASH.back, true)}
       </div>
     </div>
   );

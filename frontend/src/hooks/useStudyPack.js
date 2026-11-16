@@ -10,16 +10,15 @@ const errMsg = (e) =>
 const serverDown = (e) =>
   !e?.response || [502, 503, 504].includes(e.response.status);
 
-// state: loading | none | processing | done | failed
+// state: none | processing | done | failed
 export default function useStudyPack(materialId, enabled) {
   const navigate = useNavigate();
-  const [state, setState] = useState("loading");
+  const [state, setState] = useState("none"); // no auto-check on open
   const [error, setError] = useState(null);
   const timer = useRef(null);
   const alive = useRef(true);
 
-  // silent = true on the first page-load check, so an old FAILED pack doesn't pop a toast
-  const run = useCallback(async (method, silent = false) => {
+  const run = useCallback(async (method) => {
     clearTimeout(timer.current);
     try {
       const res = await axiosInstance[method](`/materials/${materialId}/study`);
@@ -31,10 +30,10 @@ export default function useStudyPack(materialId, enabled) {
         const msg = p.errorMessage || "Couldn't generate study notes.";
         setError(msg);
         setState("failed");
-        if (!silent) toast.error("Couldn't generate notes", { description: msg });
+        toast.error("Couldn't generate notes", { description: msg });
       } else {
         setState("processing");
-        timer.current = setTimeout(() => run("get"), 3000);
+        timer.current = setTimeout(() => run("get"), 3000); // polling only after a click
       }
     } catch (e) {
       if (!alive.current) return;
@@ -45,10 +44,6 @@ export default function useStudyPack(materialId, enabled) {
         setTimeout(() => navigate("/", { replace: true }), 1000);
         return;
       }
-      if (method === "get" && e?.response?.status === 404) {
-        setState("none"); // no pack yet -> show the Generate button
-        return;
-      }
       const msg = errMsg(e);
       setError(msg);
       setState("failed");
@@ -56,15 +51,14 @@ export default function useStudyPack(materialId, enabled) {
     }
   }, [materialId, navigate]);
 
+  // No automatic request on mount. This only tracks mount state and cleans up timers.
   useEffect(() => {
-    if (!enabled) return;
     alive.current = true;
-    run("get", true);
     return () => {
       alive.current = false;
       clearTimeout(timer.current);
     };
-  }, [enabled, run]);
+  }, [materialId]);
 
   const generate = useCallback(() => {
     setState("processing");

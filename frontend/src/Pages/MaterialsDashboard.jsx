@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 import MaterialCard from "@/components/MaterialCard";
 import Header from "@/components/Header";
 import UploadMaterialDialog from "@/components/UploadMaterialDialog";
@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { FolderPlus, Upload } from "lucide-react";
 import axiosInstance from "@/lib/axios-instance";
 
@@ -60,7 +60,7 @@ export default function MaterialsDashboard() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const  navigate = useNavigate();
+  const navigate = useNavigate();
 
   // --- Fetch Materials from Backend API GET /materials ---
   const fetchMaterials = async () => {
@@ -86,35 +86,113 @@ export default function MaterialsDashboard() {
         description: getErrorMessage(error),
       });
       setMaterials([]);
-       setTimeout(() => navigate("/"), 1000);
+      setTimeout(() => navigate("/"), 1000);
     } finally {
       setLoading(false);
     }
   };
 
- const handleLogout = async () => {
-  let serverLogoutFailed = false;
+  const handleLogout = async () => {
+    let serverLogoutFailed = false;
 
-  try {
-    await axiosInstance.post("/auth/logout");
-  } catch (error) {
-    serverLogoutFailed = true;
-    console.warn("Server logout failed:", getErrorMessage(error));
-  } finally {
-    localStorage.removeItem("accessToken");
-    navigate("/", { replace: true });
-  }
+    try {
+      await axiosInstance.post("/auth/logout");
+    } catch (error) {
+      serverLogoutFailed = true;
+      console.warn("Server logout failed:", getErrorMessage(error));
+    } finally {
+      localStorage.removeItem("accessToken");
+      navigate("/", { replace: true });
+    }
 
-  if (serverLogoutFailed) {
-    toast.info("Logged out on this device");
-  } else {
-    toast.success("Logged out successfully");
-  }
-};
+    if (serverLogoutFailed) {
+      toast.info("Logged out on this device");
+    } else {
+      toast.success("Logged out successfully");
+    }
+  };
 
+  // --- Initial load ---
   useEffect(() => {
     setMaterials([]);
     fetchMaterials();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // --- Live status updates via Server-Sent Events (GET /materials/events) ---
+  useEffect(() => {
+    const ctrl = new AbortController();
+    let retryTimer;
+    let refreshedOnce = false;
+
+    // Quietly re-read the list (no skeleton). Covers events missed while disconnected
+    // and the race where an event arrives before the first fetch finishes.
+    const syncList = async () => {
+      try {
+        const res = await axiosInstance.get("/materials");
+        const payload = res.data?.data ?? res.data;
+        if (Array.isArray(payload)) setMaterials(payload);
+      } catch {
+        /* ignore; the stream keeps working */
+      }
+    };
+
+    const connect = async () => {
+      try {
+        await fetchEventSource(`${axiosInstance.defaults.baseURL}/materials/events`, {
+          signal: ctrl.signal,
+          openWhenHidden: true, // keep streaming when the tab is in the background
+          headers: {
+            // read fresh on every connect() so a refreshed token is used
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          async onopen(res) {
+            if (res.ok) {
+              refreshedOnce = false;
+              syncList();
+              return;
+            }
+            const err = new Error(`SSE failed: ${res.status}`);
+            err.status = res.status;
+            throw err;
+          },
+          onmessage(ev) {
+            if (ev.event !== "status") return;
+            const updated = JSON.parse(ev.data);
+            setMaterials((prev) =>
+              prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m))
+            );
+          },
+          onerror(err) {
+            throw err; // we handle retry ourselves below
+          },
+        });
+      } catch (err) {
+        if (ctrl.signal.aborted) return; // component unmounted
+
+        // Expired access token: refresh once, then reconnect
+        if ((err.status === 401 || err.status === 403) && !refreshedOnce) {
+          refreshedOnce = true;
+          try {
+            const res = await axiosInstance.post("/auth/refresh");
+            localStorage.setItem("accessToken", res.data.data.accessToken);
+            return connect();
+          } catch {
+            return; // axios interceptor already redirects to login on refresh failure
+          }
+        }
+
+        // Network blip: retry in 5s
+        retryTimer = setTimeout(connect, 5000);
+      }
+    };
+
+    connect();
+
+    return () => {
+      ctrl.abort();
+      clearTimeout(retryTimer);
+    };
   }, []);
 
   // --- Handle File Upload (PDF / Video) ---
@@ -131,7 +209,12 @@ export default function MaterialsDashboard() {
       });
 
       const created = res.data?.data ?? res.data;
-      setMaterials((prev) => [created, ...prev]);
+      // If an SSE event already added/updated this id, don't duplicate the card
+      setMaterials((prev) =>
+        prev.some((m) => m.id === created.id)
+          ? prev.map((m) => (m.id === created.id ? { ...created, ...m } : m))
+          : [created, ...prev]
+      );
 
       toast.success("Upload complete", {
         description: `${file.name} was uploaded successfully !!`,
@@ -161,7 +244,11 @@ export default function MaterialsDashboard() {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-[#58A6FF]/30">
-        <Header uploading={uploading} onUploadClick={() => setUploadDialogOpen(true)} onLogout={handleLogout}/>
+        <Header
+          uploading={uploading}
+          onUploadClick={() => setUploadDialogOpen(true)}
+          onLogout={handleLogout}
+        />
 
         <UploadMaterialDialog
           open={uploadDialogOpen}
@@ -171,17 +258,6 @@ export default function MaterialsDashboard() {
 
         {/* --- Main Dashboard Content --- */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-2xl font-semibold text-white tracking-tight">
-                My Materials
-              </h1>
-              <p className="text-sm text-zinc-400 mt-1">
-                Access and manage your uploaded PDFs and learning videos.
-              </p>
-            </div>
-          </div> */}
-
           {/* Loading Skeleton Grid */}
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -191,7 +267,7 @@ export default function MaterialsDashboard() {
             </div>
           ) : materials.length === 0 ? (
             /* Elegant Empty State Message */
-            <div className="flex flex-col items-center justify-center min-h-[380px] rounded-2xl  bg-zinc-900/40 p-8 text-center backdrop-blur-sm">
+            <div className="flex flex-col items-center justify-center min-h-[380px] rounded-2xl bg-zinc-900/40 p-8 text-center backdrop-blur-sm">
               <div className="relative mb-5">
                 <div className="absolute -inset-1 rounded-full bg-[#58A6FF]/10 blur-md" />
                 <div className="relative p-4 rounded-2xl bg-zinc-900 border border-zinc-800/80 text-[#58A6FF] shadow-xl">
@@ -209,7 +285,7 @@ export default function MaterialsDashboard() {
               <button
                 type="button"
                 onClick={() => setUploadDialogOpen(true)}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#58A6FF] hover:bg-[#79B8FF] active:scale-95 text-black font-medium text-sm transition-all duration-200 shadow-lg "
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#58A6FF] hover:bg-[#79B8FF] active:scale-95 text-black font-medium text-sm transition-all duration-200 shadow-lg"
               >
                 <Upload className="h-4 w-4" />
                 <span>Upload First Material</span>
@@ -234,8 +310,6 @@ export default function MaterialsDashboard() {
           )}
         </main>
       </div>
-
-      
     </TooltipProvider>
   );
 }

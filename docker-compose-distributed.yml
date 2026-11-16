@@ -45,8 +45,6 @@ services:
   rag-worker:
     image: rag-worker:latest
     container_name: learnify-rag-worker
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     env_file:
       - .env

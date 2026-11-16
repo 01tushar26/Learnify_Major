@@ -1,10 +1,13 @@
 package learnifyApi_service.MessageBroker;
 
+import learnifyApi_service.DTOs.MaterialDTO;
 import learnifyApi_service.Entities.Enums.IngestStatus;
 import learnifyApi_service.Entities.Material;
 import learnifyApi_service.Repositories.MaterialRepository;
+import learnifyApi_service.Service.MaterialSseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +19,8 @@ import static learnifyApi_service.Configuration.MessageQueueConfig.STATUS_QUEUE;
 public class StatusUpdateConsumer {
 
     private final MaterialRepository repository;
+    private final MaterialSseService sseService;
+    private final ModelMapper mapper;
 
     @RabbitListener(queues = STATUS_QUEUE)
     public void consume(StatusUpdateMessage message){
@@ -43,6 +48,12 @@ public class StatusUpdateConsumer {
         }
         repository.save(material);
         log.info("Material [{}] updated to status {}", material.getId(), newStatus);
+        try {
+            sseService.publish(material.getUser().getId(), mapper.map(material, MaterialDTO.class));
+        } catch (Exception e) {
+            log.warn("SSE publish failed for material [{}]", material.getId(), e);
+        }
+
     }
 
     }
